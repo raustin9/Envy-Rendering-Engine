@@ -64,6 +64,7 @@ class RenderEngine {
       uniformLocations: {
         projectionMatrix: this.GL.getUniformLocation(this.shaderProgram, "uProjectionMatrix"),
         modelViewMatrix: this.GL.getUniformLocation(this.shaderProgram, "uModelViewMatrix"),
+        uMatrix: this.GL.getUniformLocation(this.shaderProgram, "uMatrix"),
       },
     };
   }
@@ -259,6 +260,9 @@ class RenderEngine {
 
     this.GL.useProgram(this.programInfo.program);
 
+    let matrix = glMatrix.mat4.create();
+    glMatrix.mat4.multiply(matrix, projectionMatrix, modelViewMatrix);
+
     this.GL.uniformMatrix4fv(
       this.programInfo.uniformLocations.projectionMatrix,
       false,
@@ -268,6 +272,11 @@ class RenderEngine {
       this.programInfo.uniformLocations.modelViewMatrix,
       false,
       modelViewMatrix
+    );
+    this.GL.uniformMatrix4fv(
+      this.programInfo.uniformLocations.uMatrix,
+      false,
+      matrix
     );
 
     {
