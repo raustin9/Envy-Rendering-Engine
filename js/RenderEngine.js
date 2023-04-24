@@ -11,12 +11,12 @@ class RenderEngine {
   buffers = null;
 
   then = 0;
-  cubeRotation = 0;
+  globalTime = 0;
 
   cameraVals = [0,0,0]; // used to move the camera around via translation
   cameraAngle = 0;      // used to change the angle of the camera via rotation
-  moveSpeed = 0.02;     // the speed that the camera can move around
-  turnSpeed = 0.005;    // the speed that the camera can turn
+  moveSpeed = 10;     // the speed that the camera can move around
+  turnSpeed = 1.5;    // the speed that the camera can turn
   keysPressed = {};
 
   /**
@@ -75,8 +75,7 @@ class RenderEngine {
     now *= 0.001;
     let deltaTime = now - this.then;
     this.then = now;
-    this.cubeRotation += deltaTime;
-    this.RenderScene(this.cubeRotation);
+    this.RenderScene(deltaTime);
     requestAnimationFrame(this.Render.bind(this));
   }
 
@@ -228,7 +227,9 @@ class RenderEngine {
     return positionBuffer;
   }
 
-  RenderScene(cubeRotation) {
+  RenderScene(deltaTime) {
+    console.log(deltaTime);
+    this.globalTime += deltaTime;
     this.GL.viewport(0, 0, this.GL.canvas.width, this.GL.canvas.height);
     this.GL.clearColor(0.1,0.1,0.1,1.0);
     this.GL.clearDepth(1.0);
@@ -293,19 +294,19 @@ class RenderEngine {
     glMatrix.mat4.rotate(
       modelViewMatrix,
       modelViewMatrix,
-      cubeRotation,
+      this.globalTime,
       [0,0,1] // rotation axis
     );
     glMatrix.mat4.rotate(
       modelViewMatrix,
       modelViewMatrix,
-      cubeRotation * .3,
+      this.globalTime * 0.3,
       [0,1,0] // rotation axis
     );
     glMatrix.mat4.rotate(
       modelViewMatrix,
       modelViewMatrix,
-      cubeRotation * 0.7,
+      this.globalTime * 0.7,
       [1,0,0] // rotation axis
     );
 
@@ -347,17 +348,17 @@ class RenderEngine {
     if (this.keysPressed['87'] || this.keysPressed['83']) {
       // W or S
       const direction = this.keysPressed['87'] ? 1 : -1;
-      // this.cameraVals[2] -= cubeRotation * this.moveSpeed * direction;
-      this.cameraVals[0] -= cameraMatrix[ 8] * cubeRotation * this.moveSpeed * direction;
-      this.cameraVals[1] -= cameraMatrix[ 9] * cubeRotation * this.moveSpeed * direction;
-      this.cameraVals[2] -= cameraMatrix[10] * cubeRotation * this.moveSpeed * direction;
+      // this.cameraVals[2] -= deltaTime * this.moveSpeed * direction;
+      this.cameraVals[0] -= cameraMatrix[ 8] * deltaTime * this.moveSpeed * direction;
+      this.cameraVals[1] -= cameraMatrix[ 9] * deltaTime * this.moveSpeed * direction;
+      this.cameraVals[2] -= cameraMatrix[10] * deltaTime * this.moveSpeed * direction;
     }
 
     if (this.keysPressed['65'] || this.keysPressed['68']) {
       // W or S
       const direction = this.keysPressed['68'] ? 1 : -1;
-      // this.cameraVals[0] -= cubeRotation * this.moveSpeed * direction;
-      this.cameraAngle += cubeRotation * this.turnSpeed * direction;
+      // this.cameraVals[0] -= deltaTime * this.moveSpeed * direction;
+      this.cameraAngle += deltaTime * this.turnSpeed * direction;
     }
   }
 
