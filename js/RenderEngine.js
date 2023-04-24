@@ -342,7 +342,7 @@ class RenderEngine {
       const type = this.GL.UNSIGNED_SHORT;
       const offset = 0;
       this.GL.drawElements(this.GL.TRIANGLES, vertexCount, type, offset);
-    }    
+    }
 
     // HANDLE KEY INPUTS
     if (this.keysPressed['87'] || this.keysPressed['83']) {
@@ -359,6 +359,13 @@ class RenderEngine {
       const direction = this.keysPressed['68'] ? 1 : -1;
       // this.cameraVals[0] -= deltaTime * this.moveSpeed * direction;
       this.cameraAngle += deltaTime * this.turnSpeed * direction;
+    }
+
+    if (this.keysPressed['16'] || this.keysPressed['32']) {
+      // W or S
+      const direction = this.keysPressed['16'] ? 1 : -1;
+      this.cameraVals[1] -= deltaTime * this.moveSpeed * direction;
+      // this.cameraAngle += deltaTime * this.turnSpeed * direction;
     }
   }
 
