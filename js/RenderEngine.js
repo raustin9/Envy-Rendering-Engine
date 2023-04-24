@@ -13,8 +13,10 @@ class RenderEngine {
   then = 0;
   cubeRotation = 0;
 
-  cameraVals = [0,0,0];
-  moveSpeed = 0.02;
+  cameraVals = [0,0,0]; // used to move the camera around via translation
+  cameraAngle = 0;      // used to change the angle of the camera via rotation
+  moveSpeed = 0.02;     // the speed that the camera can move around
+  turnSpeed = 0.005;    // the speed that the camera can turn
   keysPressed = {};
 
   /**
@@ -261,6 +263,11 @@ class RenderEngine {
       cameraMatrix,
       this.cameraVals
     );
+    glMatrix.mat4.rotateY(
+      cameraMatrix,
+      cameraMatrix,
+      -this.cameraAngle
+    );
 
     // CREATE THE VIEW MATRIX FROM THE CAMERA MATRIX
     glMatrix.mat4.invert(
@@ -340,13 +347,17 @@ class RenderEngine {
     if (this.keysPressed['87'] || this.keysPressed['83']) {
       // W or S
       const direction = this.keysPressed['87'] ? 1 : -1;
-      this.cameraVals[2] -= cubeRotation * this.moveSpeed * direction;
+      // this.cameraVals[2] -= cubeRotation * this.moveSpeed * direction;
+      this.cameraVals[0] -= cameraMatrix[ 8] * cubeRotation * this.moveSpeed * direction;
+      this.cameraVals[1] -= cameraMatrix[ 9] * cubeRotation * this.moveSpeed * direction;
+      this.cameraVals[2] -= cameraMatrix[10] * cubeRotation * this.moveSpeed * direction;
     }
 
     if (this.keysPressed['65'] || this.keysPressed['68']) {
       // W or S
-      const direction = this.keysPressed['65'] ? 1 : -1;
-      this.cameraVals[0] -= cubeRotation * this.moveSpeed * direction;
+      const direction = this.keysPressed['68'] ? 1 : -1;
+      // this.cameraVals[0] -= cubeRotation * this.moveSpeed * direction;
+      this.cameraAngle += cubeRotation * this.turnSpeed * direction;
     }
   }
 
