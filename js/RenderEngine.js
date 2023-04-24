@@ -107,8 +107,8 @@ class RenderEngine {
   }
 
   InitIndexBuffer() {
-    const indexBuffer = this.GL.createBuffer();
-    this.GL.bindBuffer(this.GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    // const indexBuffer = this.GL.createBuffer();
+    // this.GL.bindBuffer(this.GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
 
     const indices = [
@@ -150,13 +150,16 @@ class RenderEngine {
       23, // left
     ];
 
-    this.GL.bufferData(this.GL.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), this.GL.STATIC_DRAW);
-
+    // this.GL.bufferData(this.GL.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), this.GL.STATIC_DRAW);
+    let indexBuffer = new ElementData(
+      this.GL,
+      indices
+    );
     return indexBuffer;
   }
 
   InitColorBuffer() {
-    const colorBuffer = this.GL.createBuffer();
+    // const colorBuffer = this.GL.createBuffer();
     // const colorData = [
     //   1.0,
     //   1.0,
@@ -190,16 +193,25 @@ class RenderEngine {
       colors = colors.concat(c,c,c,c);
     }
 
-    this.GL.bindBuffer(this.GL.ARRAY_BUFFER, colorBuffer);
-    this.GL.bufferData(this.GL.ARRAY_BUFFER, new Float32Array(colors), this.GL.STATIC_DRAW);
+    let vertexColorBuffer = new VertexData(
+      this.GL,
+      colors,
+      this.GL.FLOAT,
+      4
+    );
 
-    return colorBuffer;
+    // this.GL.bindBuffer(this.GL.ARRAY_BUFFER, colorBuffer);
+    // this.GL.bufferData(this.GL.ARRAY_BUFFER, new Float32Array(colors), this.GL.STATIC_DRAW);
+
+    // return colorBuffer;
+    // console.log(vertexColorBuffer);
+    return vertexColorBuffer;
   }
 
   InitPositionBuffer() {
-    const positionBuffer = this.GL.createBuffer();
+    // const positionBuffer = this.GL.createBuffer();
 
-    this.GL.bindBuffer(this.GL.ARRAY_BUFFER, positionBuffer);
+    // this.GL.bindBuffer(this.GL.ARRAY_BUFFER, positionBuffer);
 
     // const positions = [1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0];
     const positions = [
@@ -222,13 +234,21 @@ class RenderEngine {
       -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
     ];    
 
-    this.GL.bufferData(this.GL.ARRAY_BUFFER, new Float32Array(positions), this.GL.STATIC_DRAW);
+    let vertexPositionBuffer = new VertexData(
+      this.GL,
+      positions,
+      this.GL.FLOAT,
+      3
+    );
 
-    return positionBuffer;
+    // this.GL.bufferData(this.GL.ARRAY_BUFFER, new Float32Array(positions), this.GL.STATIC_DRAW);
+
+    // return positionBuffer;
+    // console.log(vertexPositionBuffer);
+    return vertexPositionBuffer;
   }
 
   RenderScene(deltaTime) {
-    console.log(deltaTime);
     this.globalTime += deltaTime;
     this.GL.viewport(0, 0, this.GL.canvas.width, this.GL.canvas.height);
     this.GL.clearColor(0.1,0.1,0.1,1.0);
@@ -312,8 +332,9 @@ class RenderEngine {
 
     this.SetPositionAttribute(this.programInfo);
     this.SetColorAttribute();
+    this.buffers.indices.BindAndEnable();
 
-    this.GL.bindBuffer(this.GL.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
+    // this.GL.bindBuffer(this.GL.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
 
     this.GL.useProgram(this.programInfo.program);
 
@@ -370,90 +391,50 @@ class RenderEngine {
   }
 
   SetPositionAttribute(programInfo) {
-    const numComponents = 3;
-    const type = this.GL.FLOAT;
-    const normalize = false;
-    const stride = 0;
-    const offset = 0;
+    // const numComponents = 3;
+    // const type = this.GL.FLOAT;
+    // const normalize = false;
+    // const stride = 0;
+    // const offset = 0;
 
-    this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.buffers.position);
-    this.GL.vertexAttribPointer(
-      programInfo.attributeLocations.vertexPosition,
-      numComponents,
-      type,
-      normalize,
-      stride,
-      offset
-    );
+    // this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.buffers.position);
+    // this.GL.vertexAttribPointer(
+    //   programInfo.attributeLocations.vertexPosition,
+    //   numComponents,
+    //   type,
+    //   normalize,
+    //   stride,
+    //   offset
+    // );
 
-    this.GL.enableVertexAttribArray(programInfo.attributeLocations.vertexPosition);
+    // this.GL.enableVertexAttribArray(programInfo.attributeLocations.vertexPosition);
+    this.buffers.position.BindAndEnable(this.programInfo.attributeLocations.vertexPosition);
   }
   
   SetColorAttribute() {
-    const numComponents = 4;
-    const type = this.GL.FLOAT;
-    const normalize = false;
-    const stride = 0;
-    const offset = 0;
+    // const numComponents = 4;
+    // const type = this.GL.FLOAT;
+    // const normalize = false;
+    // const stride = 0;
+    // const offset = 0;
 
-    this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.buffers.color);
-    this.GL.vertexAttribPointer(
-      this.programInfo.attributeLocations.vertexColor,
-      numComponents,
-      type,
-      normalize,
-      stride,
-      offset
-    );
+    // this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.buffers.color);
+    // this.GL.vertexAttribPointer(
+    //   this.programInfo.attributeLocations.vertexColor,
+    //   numComponents,
+    //   type,
+    //   normalize,
+    //   stride,
+    //   offset
+    // );
 
-    this.GL.enableVertexAttribArray(this.programInfo.attributeLocations.vertexColor);
+    // this.GL.enableVertexAttribArray(this.programInfo.attributeLocations.vertexColor);
+    this.buffers.color.BindAndEnable(this.programInfo.attributeLocations.vertexColor);
   }
 
   async LoadResources() {
     this.shaderBuffer[0] = await loadNetworkResourceAsText('resources/shaders/vertex/simple.vert');   // VERTEX SHADER
     this.shaderBuffer[1] = await loadNetworkResourceAsText('resources/shaders/fragment/simple.frag'); // FRAGMENT SHADER
     this.shaderProgram = new Shader(this.GL, this.shaderBuffer[0], this.shaderBuffer[1]).shaderProgram;
-    console.log(this.shaderProgram);
-  }
-
-  
-}
-
-class Shader {
-  shaderProgram = null;
-
-  constructor(GL, vsrc, fsrc) {
-    const vertexShader   = this.LoadShader(GL, GL.VERTEX_SHADER, vsrc);
-    const fragmentShader = this.LoadShader(GL, GL.FRAGMENT_SHADER, fsrc);
-
-    this.shaderProgram = GL.createProgram();
-    GL.attachShader(this.shaderProgram, vertexShader);
-    GL.attachShader(this.shaderProgram, fragmentShader);
-    GL.linkProgram(this.shaderProgram);
-
-    if (!GL.getProgramParameter(this.shaderProgram, GL.LINK_STATUS)) {
-      alert(
-        `Unable to initialize the shader program: ${GL.getProgramInfoLog(
-          this.shaderProgram
-        )}`
-      );
-      return null;
-    }
-  }
-
-  LoadShader(GL, type, src) {
-    const shader = GL.createShader(type);
-    GL.shaderSource(shader, src);
-    GL.compileShader(shader);
-
-    if (!GL.getShaderParameter(shader, GL.COMPILE_STATUS)) {
-      alert(`
-        ERROR IN SHADER: ${GL.getShaderInfoLog(shader)}
-      `);
-      GL.deleteShader(shader);
-      return null;
-    }
-
-    return shader;
   }
 }
