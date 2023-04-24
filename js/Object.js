@@ -1,4 +1,4 @@
-class Drawable {
+class DrawableObject {
   shader = null;
   vertexBuffers = {};
   attributeLocations = null;
@@ -33,10 +33,11 @@ class Drawable {
       }
 
       const attributeNames = Object.keys(bufferMap);
-      const attributeLocations = Shader.GetAttributeLocations(attributeNames);
-
-      for (const attributeName in bufferMap) {
+      const attributeLocations = shader.GetAttributeLocations(attributeNames);
+      
+      for (let attributeName in bufferMap) {
         const location = attributeLocations[attributeName];
+        
         this.vertexBuffers[location] = bufferMap[attributeName];
       }
 
@@ -53,8 +54,25 @@ class Drawable {
         this.elementArrayBuffer.BindAndEnable();
       }
 
-      for (const bufferLocation in this.vertexBuffers) {
+      for (let bufferLocation in this.vertexBuffers) {
         this.vertexBuffers[bufferLocation].BindAndEnable(bufferLocation);
       }
+
+      this.GL.useProgram(this.shader.shaderProgram);
+
+      this.UniformSetup();
+
+      if (this.verticesCount) {
+        this.GL.drawArrays(this.GL.TRIANGLES, 0, this.verticesCount);
+        return;
+      }
+
+      const offset = 0;
+      this.GL.drawElements(
+        this.GL.TRIANGLES,
+        this.elementArrayBuffer.count,
+        this.elementArrayBuffer.type,
+        offset
+      );
     }
 }

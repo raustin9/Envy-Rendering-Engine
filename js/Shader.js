@@ -1,4 +1,5 @@
 class Shader {
+  GL = null;
   shaderProgram = null;
   vertSource = null;
   fragSource = null;
@@ -7,6 +8,7 @@ class Shader {
 
   constructor(GL, vsrc, fsrc) {
     // LOAD SOURCES FOR FRAGMENT AND VERTEX SHADERS
+    this.GL = GL;
     this.vertSource = vsrc;
     this.fragSource = fsrc;
     this.vertexShader   = this.LoadShader(GL, GL.VERTEX_SHADER, this.vertSource);
@@ -60,17 +62,19 @@ class Shader {
     let attributeLocations = {};
 
     attributeNames.forEach(attributeName => {
-      attributeLocations[attributeName] = gl.getAttribLocation(this.shaderProgram, attributeName);
+      attributeLocations[attributeName] = this.GL.getAttribLocation(this.shaderProgram, attributeName);
     });
-    return attributeNames;
+
+    return attributeLocations;
   }
 
   GetUniformLocations(uniformNames) {
     let uniformLocations = {};
 
     uniformNames.forEach(uniformName => {
-      uniformLocations[uniformName] = gl.getUniformLocation(this.shaderProgram, uniformName);
+      uniformLocations[uniformName] = this.GL.getUniformLocation(this.shaderProgram, uniformName);
     });
+    
     return uniformLocations;
   }
 }

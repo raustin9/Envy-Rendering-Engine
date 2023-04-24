@@ -4,16 +4,20 @@ class RenderEngine {
   window = null;
   canvas = null;
   GL = null; 
-  program = null;
-  shaderBuffer = [];
-  shaderProgram = null;
-  programInfo = {};
-  buffers = null;
+
+  Cube = null;
+
+  projectionMatrix = glMatrix.mat4.create();
+  modelViewMatrix = glMatrix.mat4.create();
+  cameraMatrix = glMatrix.mat4.create();
+  viewMatrix = glMatrix.mat4.create();
+  viewProjectionMatrix = glMatrix.mat4.create();
+  matrix = glMatrix.mat4.create();
 
   then = 0;
   globalTime = 0;
 
-  cameraVals = [0,0,0]; // used to move the camera around via translation
+  cameraVals = [0,0,6]; // used to move the camera around via translation
   cameraAngle = 0;      // used to change the angle of the camera via rotation
   moveSpeed = 10;     // the speed that the camera can move around
   turnSpeed = 1.5;    // the speed that the camera can turn
@@ -46,12 +50,7 @@ class RenderEngine {
 
     // GET THE RESOURCES: SHADERS
     await this.LoadResources();
-
-    // SET THE PROGRAM INFO
-    this.SetProgramInfo();
-
-    // INITIALIZE BUFFERS
-    this.buffers = this.InitBuffers();
+    // this.InitializeObject();
 
     // GET KEY INPUTS
     this.window.addEventListener('keydown', this.KeyDown.bind(this));
@@ -69,41 +68,6 @@ class RenderEngine {
   KeyUp(event) {
     this.keysPressed[event.keyCode] = false;
     event.preventDefault();
-  }
-
-  Render(now) {
-    now *= 0.001;
-    let deltaTime = now - this.then;
-    this.then = now;
-    this.RenderScene(deltaTime);
-    requestAnimationFrame(this.Render.bind(this));
-  }
-
-  SetProgramInfo() {
-    this.programInfo = {
-      program: this.shaderProgram,
-      attributeLocations: {
-        vertexPosition: this.GL.getAttribLocation(this.shaderProgram, "aVertexPosition"),
-        vertexColor: this.GL.getAttribLocation(this.shaderProgram, "aVertexColor"),
-      },
-      uniformLocations: {
-        projectionMatrix: this.GL.getUniformLocation(this.shaderProgram, "uProjectionMatrix"),
-        modelViewMatrix: this.GL.getUniformLocation(this.shaderProgram, "uModelViewMatrix"),
-        uMatrix: this.GL.getUniformLocation(this.shaderProgram, "uMatrix"),
-      },
-    };
-  }
-
-  InitBuffers() {
-    const positionBuffer = this.InitPositionBuffer();
-    const colorBuffer = this.InitColorBuffer();
-    const indexBuffer = this.InitIndexBuffer();
-
-    return{
-      position: positionBuffer,
-      color: colorBuffer,
-      indices: indexBuffer,
-    };
   }
 
   InitIndexBuffer() {
@@ -248,6 +212,69 @@ class RenderEngine {
     return vertexPositionBuffer;
   }
 
+  InitializeObject(vertSource, fragSource, objectData) {
+    let vertexPositionBuffer = this.InitPositionBuffer();
+    let vertexColorBuffer = this.InitColorBuffer();
+    let indexBuffer = this.InitIndexBuffer();
+
+    let shader = new Shader(
+      this.GL, 
+      vertSource, 
+      fragSource
+    );
+    // console.log(objectData);
+    let parsedData = new OBJData(objectData);
+    let rawData = parsedData.getFlattenedDataFromModelAtIndex(0);
+
+    // let vertexPositionBuffer = new VertexData(
+    //   this.GL,
+    //   rawData.vertices,
+    //   this.GL.float,
+    //   3
+    // );
+
+    let attributeBufferMap = {
+      'aVertexPosition': vertexPositionBuffer,
+      'aVertexColor'   : vertexColorBuffer
+    };
+
+    // this.Cube = new DrawableObject(
+    //   this.GL,
+    //   shader,
+    //   attributeBufferMap,
+    //   null,
+    //   rawData.vertices / 3
+    // );
+
+    this.Cube = new DrawableObject(
+      this.GL,
+      shader,
+      attributeBufferMap,
+      indexBuffer,
+      null
+    );
+
+    this.Cube.uniformLocations = shader.GetUniformLocations([
+      'uMatrix'
+    ]);
+    
+    this.Cube.UniformSetup = () => {
+      this.GL.uniformMatrix4fv(
+        this.Cube.uniformLocations.uMatrix,
+        false,
+        this.matrix
+      );
+    }
+  }
+
+  Render(now) {
+    now *= 0.001;
+    let deltaTime = now - this.then;
+    this.then = now;
+    this.RenderScene(deltaTime);
+    requestAnimationFrame(this.Render.bind(this));
+  }
+
   RenderScene(deltaTime) {
     this.globalTime += deltaTime;
     this.GL.viewport(0, 0, this.GL.canvas.width, this.GL.canvas.height);
@@ -263,15 +290,15 @@ class RenderEngine {
     const aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
     const nearCull = 0.1;
     const farCull = 100.0;
-    const projectionMatrix = glMatrix.mat4.create();
-    const modelViewMatrix = glMatrix.mat4.create();
-    const cameraMatrix = glMatrix.mat4.create();
-    const viewMatrix = glMatrix.mat4.create();
-    const viewProjectionMatrix = glMatrix.mat4.create();
+    this.projectionMatrix = glMatrix.mat4.create();
+    this.modelViewMatrix = glMatrix.mat4.create();
+    this.cameraMatrix = glMatrix.mat4.create();
+    this.viewMatrix = glMatrix.mat4.create();
+    this.viewProjectionMatrix = glMatrix.mat4.create();
 
     // CREATE PROJECTION MATRIX
     glMatrix.mat4.perspective(
-      projectionMatrix,
+      this.projectionMatrix,
       fieldOfView,
       aspectRatio,
       nearCull,
@@ -280,99 +307,73 @@ class RenderEngine {
 
     // POSITION THE CAMERA MATRIX
     glMatrix.mat4.translate(
-      cameraMatrix,
-      cameraMatrix,
+      this.cameraMatrix,
+      this.cameraMatrix,
       this.cameraVals
     );
     glMatrix.mat4.rotateY(
-      cameraMatrix,
-      cameraMatrix,
+      this.cameraMatrix,
+      this.cameraMatrix,
       -this.cameraAngle
     );
 
     // CREATE THE VIEW MATRIX FROM THE CAMERA MATRIX
     glMatrix.mat4.invert(
-      viewMatrix,
-      cameraMatrix
+      this.viewMatrix,
+      this.cameraMatrix
     );
 
     // CREATE THE VIEW PROJECTION MATRIX FROM THE PROJECTION AND VIEW MATRICES
     glMatrix.mat4.multiply(
-      viewProjectionMatrix,
-      projectionMatrix,
-      viewMatrix
+      this.viewProjectionMatrix,
+      this.projectionMatrix,
+      this.viewMatrix
     );
 
     // POSITION THE MODEL VIEW MATRIX
     glMatrix.mat4.translate(
-      modelViewMatrix,
-      modelViewMatrix,
-      [0.0, 0.0, -6.0]
+      this.modelViewMatrix,
+      this.modelViewMatrix,
+      [0.0, 0.0, 0.0]
     );
 
     /// ROTATE CUBE
     glMatrix.mat4.rotate(
-      modelViewMatrix,
-      modelViewMatrix,
+      this.modelViewMatrix,
+      this.modelViewMatrix,
       this.globalTime,
       [0,0,1] // rotation axis
     );
     glMatrix.mat4.rotate(
-      modelViewMatrix,
-      modelViewMatrix,
+      this.modelViewMatrix,
+      this.modelViewMatrix,
       this.globalTime * 0.3,
       [0,1,0] // rotation axis
     );
     glMatrix.mat4.rotate(
-      modelViewMatrix,
-      modelViewMatrix,
+      this.modelViewMatrix,
+      this.modelViewMatrix,
       this.globalTime * 0.7,
       [1,0,0] // rotation axis
     );
 
-    this.SetPositionAttribute(this.programInfo);
-    this.SetColorAttribute();
-    this.buffers.indices.BindAndEnable();
-
-    // this.GL.bindBuffer(this.GL.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
-
-    this.GL.useProgram(this.programInfo.program);
-
-    let matrix = glMatrix.mat4.create();
-    glMatrix.mat4.multiply(matrix, viewProjectionMatrix, modelViewMatrix);
-    // glMatrix.mat4.multiply(matrix, projectionMatrix, modelViewMatrix);
-
-    this.GL.uniformMatrix4fv(
-      this.programInfo.uniformLocations.projectionMatrix,
-      false,
-      projectionMatrix
-    );
-    this.GL.uniformMatrix4fv(
-      this.programInfo.uniformLocations.modelViewMatrix,
-      false,
-      modelViewMatrix
-    );
-    this.GL.uniformMatrix4fv(
-      this.programInfo.uniformLocations.uMatrix,
-      false,
-      matrix
+    glMatrix.mat4.multiply(
+      this.matrix, 
+      this.viewProjectionMatrix, 
+      this.modelViewMatrix
     );
 
-    {
-      const vertexCount = 36;
-      const type = this.GL.UNSIGNED_SHORT;
-      const offset = 0;
-      this.GL.drawElements(this.GL.TRIANGLES, vertexCount, type, offset);
-    }
+    // DRAW OBJECTS
+    this.Cube.Draw();
 
     // HANDLE KEY INPUTS
     if (this.keysPressed['87'] || this.keysPressed['83']) {
       // W or S
       const direction = this.keysPressed['87'] ? 1 : -1;
       // this.cameraVals[2] -= deltaTime * this.moveSpeed * direction;
-      this.cameraVals[0] -= cameraMatrix[ 8] * deltaTime * this.moveSpeed * direction;
-      this.cameraVals[1] -= cameraMatrix[ 9] * deltaTime * this.moveSpeed * direction;
-      this.cameraVals[2] -= cameraMatrix[10] * deltaTime * this.moveSpeed * direction;
+      this.cameraVals[0] -= this.cameraMatrix[ 8] * deltaTime * this.moveSpeed * direction;
+      this.cameraVals[1] -= this.cameraMatrix[ 9] * deltaTime * this.moveSpeed * direction;
+      this.cameraVals[2] -= this.cameraMatrix[10] * deltaTime * this.moveSpeed * direction;
     }
 
     if (this.keysPressed['65'] || this.keysPressed['68']) {
@@ -390,51 +391,10 @@ class RenderEngine {
     }
   }
 
-  SetPositionAttribute(programInfo) {
-    // const numComponents = 3;
-    // const type = this.GL.FLOAT;
-    // const normalize = false;
-    // const stride = 0;
-    // const offset = 0;
-
-    // this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.buffers.position);
-    // this.GL.vertexAttribPointer(
-    //   programInfo.attributeLocations.vertexPosition,
-    //   numComponents,
-    //   type,
-    //   normalize,
-    //   stride,
-    //   offset
-    // );
-
-    // this.GL.enableVertexAttribArray(programInfo.attributeLocations.vertexPosition);
-    this.buffers.position.BindAndEnable(this.programInfo.attributeLocations.vertexPosition);
-  }
-  
-  SetColorAttribute() {
-    // const numComponents = 4;
-    // const type = this.GL.FLOAT;
-    // const normalize = false;
-    // const stride = 0;
-    // const offset = 0;
-
-    // this.GL.bindBuffer(this.GL.ARRAY_BUFFER, this.buffers.color);
-    // this.GL.vertexAttribPointer(
-    //   this.programInfo.attributeLocations.vertexColor,
-    //   numComponents,
-    //   type,
-    //   normalize,
-    //   stride,
-    //   offset
-    // );
-
-    // this.GL.enableVertexAttribArray(this.programInfo.attributeLocations.vertexColor);
-    this.buffers.color.BindAndEnable(this.programInfo.attributeLocations.vertexColor);
-  }
-
   async LoadResources() {
-    this.shaderBuffer[0] = await loadNetworkResourceAsText('resources/shaders/vertex/simple.vert');   // VERTEX SHADER
-    this.shaderBuffer[1] = await loadNetworkResourceAsText('resources/shaders/fragment/simple.frag'); // FRAGMENT SHADER
-    this.shaderProgram = new Shader(this.GL, this.shaderBuffer[0], this.shaderBuffer[1]).shaderProgram;
+    let vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/simple.vert');     // VERTEX SHADER
+    let fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/simple.frag');   // FRAGMENT SHADER
+    let oData = await loadNetworkResourceAsText('resources/models/sphere.obj');
+    this.InitializeObject(vertSource, fragSource, oData);
   }
 }
