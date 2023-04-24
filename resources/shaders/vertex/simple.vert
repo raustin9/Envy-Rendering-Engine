@@ -8,6 +8,6 @@ uniform mat4 uProjectionMatrix;
 uniform mat4 uMatrix;
 
 void main() {
-  gl_Position = uMatrix* aVertexPosition;
+  gl_Position = uMatrix * aVertexPosition;
   vColor = aVertexColor;
 }

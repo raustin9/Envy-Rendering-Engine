@@ -1,6 +1,7 @@
 // THIS IS THE BASE CLASS FOR THE ENGINE //
 class RenderEngine {
   /* GLOBAL CONTEXT VARIABLES */
+  window = null;
   canvas = null;
   GL = null; 
   program = null;
@@ -11,6 +12,10 @@ class RenderEngine {
 
   then = 0;
   cubeRotation = 0;
+
+  cameraVals = [0,0,0];
+  moveSpeed = 0.02;
+  keysPressed = {};
 
   /**
    * 
@@ -25,6 +30,7 @@ class RenderEngine {
    * @param {String} canvas_name name of the canvas to get WebGL2 context
    */
   async Main(canvas_name) {
+    this.window = window;
     this.canvas = document.getElementById(canvas_name);
     this.GL = this.canvas.getContext('webgl2');
 
@@ -36,13 +42,31 @@ class RenderEngine {
     this.GL.clearColor(0.3,0.3,0.3,1.0);
     this.GL.clear(this.GL.COLOR_BUFFER_BIT);
 
+    // GET THE RESOURCES: SHADERS
     await this.LoadResources();
 
+    // SET THE PROGRAM INFO
     this.SetProgramInfo();
 
+    // INITIALIZE BUFFERS
     this.buffers = this.InitBuffers();
 
+    // GET KEY INPUTS
+    this.window.addEventListener('keydown', this.KeyDown.bind(this));
+    this.window.addEventListener('keyup', this.KeyUp.bind(this));
+
+    // RENDER SCENE
     requestAnimationFrame(this.Render.bind(this));
+  }
+
+  KeyDown(event) {
+    this.keysPressed[event.keyCode] = true;
+    event.preventDefault();
+  }
+
+  KeyUp(event) {
+    this.keysPressed[event.keyCode] = false;
+    event.preventDefault();
   }
 
   Render(now) {
@@ -218,7 +242,11 @@ class RenderEngine {
     const farCull = 100.0;
     const projectionMatrix = glMatrix.mat4.create();
     const modelViewMatrix = glMatrix.mat4.create();
+    const cameraMatrix = glMatrix.mat4.create();
+    const viewMatrix = glMatrix.mat4.create();
+    const viewProjectionMatrix = glMatrix.mat4.create();
 
+    // CREATE PROJECTION MATRIX
     glMatrix.mat4.perspective(
       projectionMatrix,
       fieldOfView,
@@ -227,10 +255,31 @@ class RenderEngine {
       farCull
     );
 
+    // POSITION THE CAMERA MATRIX
+    glMatrix.mat4.translate(
+      cameraMatrix,
+      cameraMatrix,
+      this.cameraVals
+    );
+
+    // CREATE THE VIEW MATRIX FROM THE CAMERA MATRIX
+    glMatrix.mat4.invert(
+      viewMatrix,
+      cameraMatrix
+    );
+
+    // CREATE THE VIEW PROJECTION MATRIX FROM THE PROJECTION AND VIEW MATRICES
+    glMatrix.mat4.multiply(
+      viewProjectionMatrix,
+      projectionMatrix,
+      viewMatrix
+    );
+
+    // POSITION THE MODEL VIEW MATRIX
     glMatrix.mat4.translate(
       modelViewMatrix,
       modelViewMatrix,
-      [-0.0, 0.0, -6.0]
+      [0.0, 0.0, -6.0]
     );
 
     /// ROTATE CUBE
@@ -261,7 +310,8 @@ class RenderEngine {
     this.GL.useProgram(this.programInfo.program);
 
     let matrix = glMatrix.mat4.create();
-    glMatrix.mat4.multiply(matrix, projectionMatrix, modelViewMatrix);
+    glMatrix.mat4.multiply(matrix, viewProjectionMatrix, modelViewMatrix);
+    // glMatrix.mat4.multiply(matrix, projectionMatrix, modelViewMatrix);
 
     this.GL.uniformMatrix4fv(
       this.programInfo.uniformLocations.projectionMatrix,
@@ -285,6 +335,19 @@ class RenderEngine {
       const offset = 0;
       this.GL.drawElements(this.GL.TRIANGLES, vertexCount, type, offset);
     }    
+
+    // HANDLE KEY INPUTS
+    if (this.keysPressed['87'] || this.keysPressed['83']) {
+      // W or S
+      const direction = this.keysPressed['87'] ? 1 : -1;
+      this.cameraVals[2] -= cubeRotation * this.moveSpeed * direction;
+    }
+
+    if (this.keysPressed['65'] || this.keysPressed['68']) {
+      // W or S
+      const direction = this.keysPressed['65'] ? 1 : -1;
+      this.cameraVals[0] -= cubeRotation * this.moveSpeed * direction;
+    }
   }
 
   SetPositionAttribute(programInfo) {
@@ -333,6 +396,8 @@ class RenderEngine {
     this.shaderProgram = new Shader(this.GL, this.shaderBuffer[0], this.shaderBuffer[1]).shaderProgram;
     console.log(this.shaderProgram);
   }
+
+  
 }
 
 class Shader {
