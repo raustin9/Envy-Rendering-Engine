@@ -20,6 +20,7 @@ class RenderEngine {
 
   cameraVals = [0,0,6];  // used to move the camera around via translation
   cameraAngle = 0;       // used to change the angle of the camera via rotation
+  cameraElevation = 0;   // used to angle the camera up and down
   moveSpeed = 10;        // the speed that the camera can move around
   turnSpeed = 1.5;       // the speed that the camera can turn
   keysPressed = {};      // keeps track of whick keys have been pressed
@@ -202,6 +203,11 @@ class RenderEngine {
       this.cameraMatrix,
       -this.cameraAngle
     );
+    glMatrix.mat4.rotateX(
+      this.cameraMatrix,
+      this.cameraMatrix,
+      this.cameraElevation
+    );
 
     // CREATE THE VIEW MATRIX FROM THE CAMERA MATRIX
     glMatrix.mat4.invert(
@@ -270,9 +276,15 @@ class RenderEngine {
     }
 
     if (this.keysPressed['16'] || this.keysPressed['32']) {
-      // W or S
+      // SHIFT OR SPACE
       const direction = this.keysPressed['16'] ? 1 : -1;
       this.cameraVals[1] -= deltaTime * this.moveSpeed * direction;
+    }
+
+    if (this.keysPressed['38'] || this.keysPressed['40']) {
+      // ARROW_UP OR ARROW_DOWN
+      const direction = this.keysPressed['38'] ? 1 : -1;
+      this.cameraElevation += deltaTime * this.turnSpeed * direction;
     }
   }
 
