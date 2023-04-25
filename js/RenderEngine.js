@@ -53,11 +53,6 @@ class RenderEngine {
     this.GL.clearColor(0.3,0.3,0.3,1.0);
     this.GL.clear(this.GL.COLOR_BUFFER_BIT);
 
-    // GET THE RESOURCES: SHADERS
-    await this.LoadResources();
-    // console.log(await this.LoadResources());
-    // this.InitializeObject();
-
     // GET KEY INPUTS
     this.window.addEventListener('keydown', this.KeyDown.bind(this));
     this.window.addEventListener('keyup', this.KeyUp.bind(this));
@@ -291,7 +286,7 @@ class RenderEngine {
   async LoadResources() {
     let vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/bary300.vert');     // VERTEX SHADER
     let fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/bary300.frag');   // FRAGMENT SHADER
-    let oData = await loadNetworkResourceAsText('resources/models/DROPSHIP.obj');
-    // this.InitializeObject(vertSource, fragSource, oData);
+    let oData = await loadNetworkResourceAsText('resources/models/fighter.obj');
+    this.InitializeObject(vertSource, fragSource, oData);
   }
 }

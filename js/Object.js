@@ -53,6 +53,20 @@ class DrawableObject {
     }
   }
 
+  async LoadShaders(vertSource, fragSource) {
+    let vSource = await loadNetworkResourceAsText(vertSource);
+    let fSource = await loadNetworkResourceAsText(fragSource);
+    this.shader = new Shader(
+      this.GL,
+      vSource,
+      fSource
+    );
+  }
+
+  async LoadModelData(modelSource) {
+    let oData = await loadNetworkResourceAsText(modelSource);
+  }
+
   // DRAWS DRAWABLE TO SCREEN
   Draw() {
     if (this.elementArrayBuffer && !this.verticesCount) {

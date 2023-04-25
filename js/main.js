@@ -1,16 +1,21 @@
 // GET CANVAS CONTEXT TO PASS TO THE ENGINE
 // THE ENGINE WILL CREATE THE GL CONTEXT AND HENDLE RENDERING
 let canvas = document.getElementById("main-canvas");
-let obj = null;
+vertSource = null;
+fragSource = null;
+oData = null;
+let myshader = null;
 const engine = new RenderEngine(canvas);
 
-LoadResources();
+LoadResources().then(() => {
+  obj = InitializeObject(vertSource, fragSource, oData);
+  engine.AddObject(obj);
+});
 
 async function LoadResources() {
-  let vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/bary300.vert');     // VERTEX SHADER
-  let fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/bary300.frag');   // FRAGMENT SHADER
-  let oData = await loadNetworkResourceAsText('resources/models/DROPSHIP.obj');
-  InitializeObject(vertSource, fragSource, oData);
+  vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/bary300.vert');     // VERTEX SHADER
+  fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/bary300.frag');   // FRAGMENT SHADER
+  oData = await loadNetworkResourceAsText('resources/models/fighter.obj');
 }
 
 function InitializeObject(vertSource, fragSource, oData) {
@@ -76,7 +81,7 @@ function InitializeObject(vertSource, fragSource, oData) {
     );
   }
 
-  engine.AddObject(obj);
+  // engine.AddObject(obj);
 
   return obj;
 }
