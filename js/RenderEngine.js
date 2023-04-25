@@ -1,12 +1,13 @@
 // THIS IS THE BASE CLASS FOR THE ENGINE //
 class RenderEngine {
   /* GLOBAL CONTEXT VARIABLES */
-  window = null;
-  canvas = null;
-  GL = null; 
+  window = null; // browser window
+  canvas = null; // canvas element
+  GL = null;     // webGL2 context
 
-  Cube = null;
+  Objects = []; // List of objectst to be rendered
 
+  // MATRICES
   projectionMatrix = glMatrix.mat4.create();
   modelViewMatrix = glMatrix.mat4.create();
   cameraMatrix = glMatrix.mat4.create();
@@ -14,14 +15,14 @@ class RenderEngine {
   viewProjectionMatrix = glMatrix.mat4.create();
   matrix = glMatrix.mat4.create();
 
-  then = 0;
-  globalTime = 0;
+  then = 0;       // used for keeping time
+  globalTime = 0; // total time passed
 
   cameraVals = [0,0,6]; // used to move the camera around via translation
   cameraAngle = 0;      // used to change the angle of the camera via rotation
-  moveSpeed = 10;     // the speed that the camera can move around
-  turnSpeed = 1.5;    // the speed that the camera can turn
-  keysPressed = {};
+  moveSpeed = 10;       // the speed that the camera can move around
+  turnSpeed = 1.5;      // the speed that the camera can turn
+  keysPressed = {};     // keeps track of whick keys have been pressed
 
   /**
    * 
@@ -60,6 +61,7 @@ class RenderEngine {
     requestAnimationFrame(this.Render.bind(this));
   }
 
+  /// LISTENERS FOR KEY INPUTS
   KeyDown(event) {
     this.keysPressed[event.keyCode] = true;
     event.preventDefault();
@@ -70,203 +72,83 @@ class RenderEngine {
     event.preventDefault();
   }
 
-  InitIndexBuffer() {
-    // const indexBuffer = this.GL.createBuffer();
-    // this.GL.bindBuffer(this.GL.ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-
-    const indices = [
-      0,
-      1,
-      2,
-      0,
-      2,
-      3, // front
-      4,
-      5,
-      6,
-      4,
-      6,
-      7, // back
-      8,
-      9,
-      10,
-      8,
-      10,
-      11, // top
-      12,
-      13,
-      14,
-      12,
-      14,
-      15, // bottom
-      16,
-      17,
-      18,
-      16,
-      18,
-      19, // right
-      20,
-      21,
-      22,
-      20,
-      22,
-      23, // left
-    ];
-
-    // this.GL.bufferData(this.GL.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), this.GL.STATIC_DRAW);
-    let indexBuffer = new ElementData(
-      this.GL,
-      indices
-    );
-    return indexBuffer;
-  }
-
-  InitColorBuffer() {
-    // const colorBuffer = this.GL.createBuffer();
-    // const colorData = [
-    //   1.0,
-    //   1.0,
-    //   1.0,
-    //   1.0, // white
-    //   1.0,
-    //   0.0,
-    //   0.0,
-    //   1.0, // red
-    //   0.0,
-    //   1.0,
-    //   0.0,
-    //   1.0, // green
-    //   0.0,
-    //   0.0,
-    //   1.0,
-    //   1.0, // blue
-    // ];
-    const faceColors = [
-      [1.0, 1.0, 1.0, 1.0], // Front face: white
-      [1.0, 0.0, 0.0, 1.0], // Back face: red
-      [0.0, 1.0, 0.0, 1.0], // Top face: green
-      [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
-      [1.0, 1.0, 0.0, 1.0], // Right face: yellow
-      [1.0, 0.0, 1.0, 1.0], // Left face: purple
-    ];
-
-    let colors = [];
-    for (let i = 0; i < faceColors.length; i++) {
-      const c = faceColors[i];
-      colors = colors.concat(c,c,c,c);
-    }
-
-    let vertexColorBuffer = new VertexData(
-      this.GL,
-      colors,
-      this.GL.FLOAT,
-      4
-    );
-
-    // this.GL.bindBuffer(this.GL.ARRAY_BUFFER, colorBuffer);
-    // this.GL.bufferData(this.GL.ARRAY_BUFFER, new Float32Array(colors), this.GL.STATIC_DRAW);
-
-    // return colorBuffer;
-    // console.log(vertexColorBuffer);
-    return vertexColorBuffer;
-  }
-
-  InitPositionBuffer() {
-    // const positionBuffer = this.GL.createBuffer();
-
-    // this.GL.bindBuffer(this.GL.ARRAY_BUFFER, positionBuffer);
-
-    // const positions = [1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0];
-    const positions = [
-      // Front face
-      -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
-    
-      // Back face
-      -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
-    
-      // Top face
-      -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
-    
-      // Bottom face
-      -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
-    
-      // Right face
-      1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
-    
-      // Left face
-      -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
-    ];    
-
-    let vertexPositionBuffer = new VertexData(
-      this.GL,
-      positions,
-      this.GL.FLOAT,
-      3
-    );
-
-    // this.GL.bufferData(this.GL.ARRAY_BUFFER, new Float32Array(positions), this.GL.STATIC_DRAW);
-
-    // return positionBuffer;
-    // console.log(vertexPositionBuffer);
-    return vertexPositionBuffer;
-  }
-
+  /**
+   * Used to initialize an instance of an object to be rendered and appends it to global list
+   * @param {String} vertSource source code of vertex shader for the object
+   * @param {String} fragSource source code of fragment shader for object
+   * @param {String} objectData source file string for .obj file for object
+   */
   InitializeObject(vertSource, fragSource, objectData) {
-    let vertexPositionBuffer = this.InitPositionBuffer();
-    let vertexColorBuffer = this.InitColorBuffer();
-    let indexBuffer = this.InitIndexBuffer();
-
     let shader = new Shader(
       this.GL, 
       vertSource, 
       fragSource
     );
-    // console.log(objectData);
+    
     let parsedData = new OBJData(objectData);
     let rawData = parsedData.getFlattenedDataFromModelAtIndex(0);
 
-    // let vertexPositionBuffer = new VertexData(
-    //   this.GL,
-    //   rawData.vertices,
-    //   this.GL.float,
-    //   3
-    // );
+    let vertexPositionBuffer = new VertexData(
+      this.GL,
+      rawData.vertices,
+      this.GL.FLOAT,
+      3
+    );
+    let vertexNormalBuffer = new VertexData(
+      this.GL,
+      rawData.normals,
+      this.GL.FLOAT,
+      3
+    );
+    let vertexTexCoordBuffer = new VertexData (
+      this.GL,
+      rawData.uvs,
+      this.GL.FLOAT,
+      2
+    );
+    
+    let vertexBarycentricBuffer = new VertexData (
+      this.GL,
+      rawData.barycentricCoords,
+      this.GL.FLOAT,
+      3
+    );
 
     let attributeBufferMap = {
       'aVertexPosition': vertexPositionBuffer,
-      'aVertexColor'   : vertexColorBuffer
-    };
+      'aBarycentricCoord': vertexBarycentricBuffer,
+      // 'aVertexNormal'    : vertexNormalBuffer,
+      // 'aVertexTexCoord'  : vertexTexCoordBuffer
+    }
 
-    // this.Cube = new DrawableObject(
-    //   this.GL,
-    //   shader,
-    //   attributeBufferMap,
-    //   null,
-    //   rawData.vertices / 3
-    // );
-
-    this.Cube = new DrawableObject(
+    let obj = new DrawableObject(
       this.GL,
       shader,
       attributeBufferMap,
-      indexBuffer,
-      null
+      null,
+      rawData.vertices.length / 3
     );
 
-    this.Cube.uniformLocations = shader.GetUniformLocations([
+    obj.uniformLocations = shader.GetUniformLocations([
       'uMatrix'
     ]);
     
-    this.Cube.UniformSetup = () => {
+    obj.UniformSetup = () => {
       this.GL.uniformMatrix4fv(
-        this.Cube.uniformLocations.uMatrix,
+        obj.uniformLocations.uMatrix,
         false,
         this.matrix
       );
     }
+
+    // Append object to list of objects to be rendered
+    this.Objects.push(obj);
   }
 
+  /**
+   * Used for animation and keeps rerendeing the scene
+   * @param {Number} now current timestamp
+   */
   Render(now) {
     now *= 0.001;
     let deltaTime = now - this.then;
@@ -275,6 +157,10 @@ class RenderEngine {
     requestAnimationFrame(this.Render.bind(this));
   }
 
+  /**
+   * 
+   * @param {Number} deltaTime the time differnece between last render and this one
+   */
   RenderScene(deltaTime) {
     this.globalTime += deltaTime;
     this.GL.viewport(0, 0, this.GL.canvas.width, this.GL.canvas.height);
@@ -364,13 +250,14 @@ class RenderEngine {
     );
 
     // DRAW OBJECTS
-    this.Cube.Draw();
+    for (let i = 0; i < this.Objects.length; i++) {
+      this.Objects[i].Draw();
+    }
 
     // HANDLE KEY INPUTS
     if (this.keysPressed['87'] || this.keysPressed['83']) {
       // W or S
       const direction = this.keysPressed['87'] ? 1 : -1;
-      // this.cameraVals[2] -= deltaTime * this.moveSpeed * direction;
       this.cameraVals[0] -= this.cameraMatrix[ 8] * deltaTime * this.moveSpeed * direction;
       this.cameraVals[1] -= this.cameraMatrix[ 9] * deltaTime * this.moveSpeed * direction;
       this.cameraVals[2] -= this.cameraMatrix[10] * deltaTime * this.moveSpeed * direction;
@@ -379,7 +266,6 @@ class RenderEngine {
     if (this.keysPressed['65'] || this.keysPressed['68']) {
       // W or S
       const direction = this.keysPressed['68'] ? 1 : -1;
-      // this.cameraVals[0] -= deltaTime * this.moveSpeed * direction;
       this.cameraAngle += deltaTime * this.turnSpeed * direction;
     }
 
@@ -387,14 +273,16 @@ class RenderEngine {
       // W or S
       const direction = this.keysPressed['16'] ? 1 : -1;
       this.cameraVals[1] -= deltaTime * this.moveSpeed * direction;
-      // this.cameraAngle += deltaTime * this.turnSpeed * direction;
     }
   }
 
+  /**
+   * Used to load the resources for objects
+   */
   async LoadResources() {
-    let vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/simple.vert');     // VERTEX SHADER
-    let fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/simple.frag');   // FRAGMENT SHADER
-    let oData = await loadNetworkResourceAsText('resources/models/sphere.obj');
+    let vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/bary300.vert');     // VERTEX SHADER
+    let fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/bary300.frag');   // FRAGMENT SHADER
+    let oData = await loadNetworkResourceAsText('resources/models/bunny.obj');
     this.InitializeObject(vertSource, fragSource, oData);
   }
 }
