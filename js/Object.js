@@ -1,10 +1,15 @@
 class DrawableObject {
+  GL = null;
   shader = null;
   vertexBuffers = {};
   attributeLocations = null;
   uniformLocations = null;
   elementArrayBuffer = null;
   verticesCount = null;
+
+  vertexShader = null;
+  fragmentShader = null;
+  objectData = null;
 
   /**
    * uniform setup - this is a function that should be defined per drawable
@@ -21,7 +26,7 @@ class DrawableObject {
   constructor(
     GL,
     shader,
-    bufferMap,
+    attributeBuffer,
     elementBuffer = null,
     verticesCount = null
   ) {
@@ -32,13 +37,13 @@ class DrawableObject {
       throw 'You must specify an element Index Buffer or vertices count!';
     }
 
-    const attributeNames = Object.keys(bufferMap);
+    const attributeNames = Object.keys(attributeBuffer);
     const attributeLocations = shader.GetAttributeLocations(attributeNames);
     
-    for (let attributeName in bufferMap) {
+    for (let attributeName in attributeBuffer) {
       const location = attributeLocations[attributeName];
       
-      this.vertexBuffers[location] = bufferMap[attributeName];
+      this.vertexBuffers[location] = attributeBuffer[attributeName];
     }
 
     if (elementBuffer) {

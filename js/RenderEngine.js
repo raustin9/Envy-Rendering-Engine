@@ -18,28 +18,32 @@ class RenderEngine {
   then = 0;       // used for keeping time
   globalTime = 0; // total time passed
 
-  cameraVals = [0,0,6]; // used to move the camera around via translation
-  cameraAngle = 0;      // used to change the angle of the camera via rotation
-  moveSpeed = 10;       // the speed that the camera can move around
-  turnSpeed = 1.5;      // the speed that the camera can turn
-  keysPressed = {};     // keeps track of whick keys have been pressed
+  cameraVals = [0,0,6];  // used to move the camera around via translation
+  cameraAngle = 0;       // used to change the angle of the camera via rotation
+  moveSpeed = 10;        // the speed that the camera can move around
+  turnSpeed = 1.5;       // the speed that the camera can turn
+  keysPressed = {};      // keeps track of whick keys have been pressed
+
+  init = null;
 
   /**
    * 
    * @param {String} canvas_name name of the canvas that will be the webGL context
    */
-  constructor(canvas_name) {
-    this.Main(canvas_name);
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.GL = this.canvas.getContext('webgl2');
+    this.Main();
   }
 
   /**
    * 
    * @param {String} canvas_name name of the canvas to get WebGL2 context
    */
-  async Main(canvas_name) {
+  async Main() {
     this.window = window;
-    this.canvas = document.getElementById(canvas_name);
-    this.GL = this.canvas.getContext('webgl2');
+    // this.canvas = document.getElementById(canvas_name);
+    // this.GL = this.canvas.getContext('webgl2');
 
     if (!this.GL) {
       console.log("ERROR: BROWSER DOES NOT SUPPORT WEBGL2");
@@ -51,13 +55,14 @@ class RenderEngine {
 
     // GET THE RESOURCES: SHADERS
     await this.LoadResources();
+    // console.log(await this.LoadResources());
     // this.InitializeObject();
 
     // GET KEY INPUTS
     this.window.addEventListener('keydown', this.KeyDown.bind(this));
     this.window.addEventListener('keyup', this.KeyUp.bind(this));
 
-    // RENDER SCENE
+    // // RENDER SCENE
     requestAnimationFrame(this.Render.bind(this));
   }
 
@@ -224,24 +229,24 @@ class RenderEngine {
     );
 
     /// ROTATE CUBE
-    glMatrix.mat4.rotate(
-      this.modelViewMatrix,
-      this.modelViewMatrix,
-      this.globalTime,
-      [0,0,1] // rotation axis
-    );
-    glMatrix.mat4.rotate(
-      this.modelViewMatrix,
-      this.modelViewMatrix,
-      this.globalTime * 0.3,
-      [0,1,0] // rotation axis
-    );
-    glMatrix.mat4.rotate(
-      this.modelViewMatrix,
-      this.modelViewMatrix,
-      this.globalTime * 0.7,
-      [1,0,0] // rotation axis
-    );
+    // glMatrix.mat4.rotate(
+    //   this.modelViewMatrix,
+    //   this.modelViewMatrix,
+    //   this.globalTime,
+    //   [0,0,1] // rotation axis
+    // );
+    // glMatrix.mat4.rotate(
+    //   this.modelViewMatrix,
+    //   this.modelViewMatrix,
+    //   this.globalTime * 0.6,
+    //   [0,1,0] // rotation axis
+    // );
+    // glMatrix.mat4.rotate(
+    //   this.modelViewMatrix,
+    //   this.modelViewMatrix,
+    //   this.globalTime * 0.7,
+    //   [1,0,0] // rotation axis
+    // );
 
     glMatrix.mat4.multiply(
       this.matrix, 
@@ -276,13 +281,17 @@ class RenderEngine {
     }
   }
 
+  AddObject(object) {
+    this.Objects.push(object);
+  }
+
   /**
    * Used to load the resources for objects
    */
   async LoadResources() {
     let vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/bary300.vert');     // VERTEX SHADER
     let fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/bary300.frag');   // FRAGMENT SHADER
-    let oData = await loadNetworkResourceAsText('resources/models/bunny.obj');
-    this.InitializeObject(vertSource, fragSource, oData);
+    let oData = await loadNetworkResourceAsText('resources/models/DROPSHIP.obj');
+    // this.InitializeObject(vertSource, fragSource, oData);
   }
 }
