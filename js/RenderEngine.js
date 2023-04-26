@@ -25,6 +25,8 @@ class RenderEngine {
   turnSpeed = 1.5;       // the speed that the camera can turn
   keysPressed = {};      // keeps track of whick keys have been pressed
 
+  modelMatrices = [];
+
   init = null;
 
   /**
@@ -33,7 +35,7 @@ class RenderEngine {
    */
   constructor(canvas) {
     this.canvas = canvas;
-    this.GL = this.canvas.getContext('webgl2');
+    this.GL = this.canvas.getContext('webgl2', { preserveDrawingBuffer: true });
     this.Main();
   }
 
@@ -57,6 +59,22 @@ class RenderEngine {
     // GET KEY INPUTS
     this.window.addEventListener('keydown', this.KeyDown.bind(this));
     this.window.addEventListener('keyup', this.KeyUp.bind(this));
+
+    // CREATE PROJECTION MATRIX
+    const fieldOfView = (45 * Math.PI) / 180;
+    const aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
+    const nearCull = 0.1;
+    const farCull = 100.0;
+    this.projectionMatrix = glMatrix.mat4.create();
+    glMatrix.mat4.perspective(
+      this.projectionMatrix,
+      fieldOfView,
+      aspectRatio,
+      nearCull,
+      farCull
+    );
+    this.modelViewMatrix = glMatrix.mat4.create();
+    this.viewProjectionMatrix = glMatrix.mat4.create();
 
     // // RENDER SCENE
     requestAnimationFrame(this.Render.bind(this));
@@ -173,24 +191,24 @@ class RenderEngine {
 
     this.GL.clear(this.GL.COLOR_BUFFER_BIT | this.GL.DEPTH_BUFFER_BIT);
 
-    const fieldOfView = (45 * Math.PI) / 180;
-    const aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
-    const nearCull = 0.1;
-    const farCull = 100.0;
-    this.projectionMatrix = glMatrix.mat4.create();
-    this.modelViewMatrix = glMatrix.mat4.create();
+    // const fieldOfView = (45 * Math.PI) / 180;
+    // const aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
+    // const nearCull = 0.1;
+    // const farCull = 100.0;
+    // this.projectionMatrix = glMatrix.mat4.create();
+    // this.modelViewMatrix = glMatrix.mat4.create();
     this.cameraMatrix = glMatrix.mat4.create();
     this.viewMatrix = glMatrix.mat4.create();
-    this.viewProjectionMatrix = glMatrix.mat4.create();
+    // this.viewProjectionMatrix = glMatrix.mat4.create();
 
     // CREATE PROJECTION MATRIX
-    glMatrix.mat4.perspective(
-      this.projectionMatrix,
-      fieldOfView,
-      aspectRatio,
-      nearCull,
-      farCull
-    );
+    // glMatrix.mat4.perspective(
+    //   this.projectionMatrix,
+    //   fieldOfView,
+    //   aspectRatio,
+    //   nearCull,
+    //   farCull
+    // );
 
     // POSITION THE CAMERA MATRIX
     glMatrix.mat4.translate(
@@ -222,12 +240,15 @@ class RenderEngine {
       this.viewMatrix
     );
 
+    for (let i = 0; i < this.Objects.length; i++) {
+      this.modelMatrices.push(glMatrix.mat4.create());
+    }
     // POSITION THE MODEL VIEW MATRIX
-    glMatrix.mat4.translate(
-      this.modelViewMatrix,
-      this.modelViewMatrix,
-      [0.0, 0.0, 0.0]
-    );
+    // glMatrix.mat4.translate(
+    //   this.modelViewMatrix,
+    //   this.modelViewMatrix,
+    //   [0.0, 0.0, 0.0]
+    // );
 
     /// ROTATE CUBE
     // glMatrix.mat4.rotate(
@@ -245,18 +266,36 @@ class RenderEngine {
     // glMatrix.mat4.rotate(
     //   this.modelViewMatrix,
     //   this.modelViewMatrix,
-    //   this.globalTime * 0.7,
+    //   3 * Math.PI / 2,
     //   [1,0,0] // rotation axis
     // );
 
-    glMatrix.mat4.multiply(
-      this.matrix, 
-      this.viewProjectionMatrix, 
-      this.modelViewMatrix
-    );
+    // glMatrix.mat4.translate(
+    //   this.modelViewMatrix,
+    //   this.modelViewMatrix,
+    //   [0.0, 0.0, 0.0]
+    // );
+
+    // glMatrix.mat4.multiply(
+    //   this.matrix, 
+    //   this.viewProjectionMatrix, 
+    //   this.modelViewMatrix
+    // );
 
     // DRAW OBJECTS
     for (let i = 0; i < this.Objects.length; i++) {
+      glMatrix.mat4.multiply(
+        this.matrix,
+        this.viewProjectionMatrix,
+        this.modelMatrices[i]
+      );
+      this.Objects[i].UniformSetup = () => {
+        engine.GL.uniformMatrix4fv(
+          this.Objects[i].uniformLocations.uMatrix,
+          false,
+          this.matrix
+        );
+      }
       this.Objects[i].Draw();
     }
 
@@ -295,10 +334,10 @@ class RenderEngine {
   /**
    * Used to load the resources for objects
    */
-  async LoadResources() {
-    let vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/bary300.vert');     // VERTEX SHADER
-    let fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/bary300.frag');   // FRAGMENT SHADER
-    let oData = await loadNetworkResourceAsText('resources/models/fighter.obj');
-    this.InitializeObject(vertSource, fragSource, oData);
-  }
+  // async LoadResources() {
+  //   let vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/bary300.vert');     // VERTEX SHADER
+  //   let fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/bary300.frag');   // FRAGMENT SHADER
+  //   let oData = await loadNetworkResourceAsText('resources/models/fighter.obj');
+  //   this.InitializeObject(vertSource, fragSource, oData);
+  // }
 }

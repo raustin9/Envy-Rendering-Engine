@@ -10,13 +10,14 @@ class DrawableObject {
   vertexShader = null;
   fragmentShader = null;
   objectData = null;
+  index = null;
 
   /**
    * uniform setup - this is a function that should be defined per drawable
    * If you are familiar with C++ and not JavaScript, treat this as a member variable
    * that is a function. 
    */
-  UniformSetup = () => {
+  UniformSetup = (index) => {
     if(!this.uniformSetupWarned) {
       console.warn('A drawable being drawn does not have a uniformSetup function.');
       this.uniformSetupWarned = true;
@@ -28,11 +29,12 @@ class DrawableObject {
     shader,
     attributeBuffer,
     elementBuffer = null,
-    verticesCount = null
+    verticesCount = null,
+    shaderSourceMap
   ) {
     this.shader = shader;
     this.GL = GL;
-
+    
     if (!elementBuffer && !verticesCount) {
       throw 'You must specify an element Index Buffer or vertices count!';
     }
@@ -53,16 +55,6 @@ class DrawableObject {
     }
   }
 
-  async LoadShaders(vertSource, fragSource) {
-    let vSource = await loadNetworkResourceAsText(vertSource);
-    let fSource = await loadNetworkResourceAsText(fragSource);
-    this.shader = new Shader(
-      this.GL,
-      vSource,
-      fSource
-    );
-  }
-
   async LoadModelData(modelSource) {
     let oData = await loadNetworkResourceAsText(modelSource);
   }
@@ -79,7 +71,7 @@ class DrawableObject {
 
     this.GL.useProgram(this.shader.shaderProgram);
 
-    this.UniformSetup();
+    this.UniformSetup(this.index);
 
     if (this.verticesCount) {
       this.GL.drawArrays(this.GL.TRIANGLES, 0, this.verticesCount);
