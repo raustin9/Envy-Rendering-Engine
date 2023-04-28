@@ -22,10 +22,11 @@ out vec3 outBary;
 // these are set "constant" values that can be read by vertex and fragment shader
 // if you want to use a uniform in the fragment shader then you must declare it at the top as well.
 uniform mat4 uMatrix;
+uniform mat4 uWorldViewProjection;
 
 void main() {
   // gl_Position is still reserved in this version of GLSL :)
-  gl_Position = uMatrix * vec4(aVertexPosition, 1.0);
+  gl_Position = uWorldViewProjection * vec4(aVertexPosition, 1.0);
   outColor = vec3(1.0, 1.0, 1.0);
   outBary = aBarycentricCoord;
 }

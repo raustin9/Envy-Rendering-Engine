@@ -16,8 +16,6 @@ class RenderEngine {
   normalMatrix = glMatrix.mat4.create();
   matrix = glMatrix.mat4.create();
   worldViewProjection = glMatrix.mat4.create();
-  worldInverse = glMatrix.mat4.create();
-  worldInverseTranspose = glMatrix.mat4.create();
 
   lightPosition = [-6, 5, 2];
 
@@ -239,7 +237,6 @@ class RenderEngine {
       'uModelViewMatrix',
       'sampler',
       'uWorldViewProjection',
-      'uWorldInverseTranspose',
       'uLightPosition'
     ]);
 
@@ -259,21 +256,9 @@ class RenderEngine {
       );
 
       this.GL.uniformMatrix4fv(
-        object.uniformLocations.uModelViewMatrix,
-        false,
-        this.Objects[objectName].modelViewMatrix
-      );
-
-      this.GL.uniformMatrix4fv(
         object.uniformLocations.uWorldViewProjection,
         false,
         this.worldViewProjection
-      );
-
-      this.GL.uniformMatrix4fv(
-        object.uniformLocations.uWorldInverseTranspose,
-        false,
-        this.worldInverseTranspose
       );
 
       this.GL.uniform3fv(
@@ -384,8 +369,6 @@ class RenderEngine {
 
     this.matrix = glMatrix.mat4.create();
     glMatrix.mat4.multiply(this.worldViewProjection, this.viewProjectionMatrix, this.matrix);
-    glMatrix.mat4.invert(this.worldInverse, this.matrix);
-    glMatrix.mat4.transpose(this.worldInverseTranspose, this.worldInverse);
 
     // DRAW OBJECTS
     for (let object in this.Objects) {
@@ -394,7 +377,7 @@ class RenderEngine {
       this.Objects[object].modelViewMatrix = glMatrix.mat4.create();
       this.Objects[object].normalMatrix = glMatrix.mat4.create();
       this.Objects[object].drawableObject.Animate();
-      // this.Objects[object].drawableObject.Animate();
+
       glMatrix.mat4.multiply(this.Objects[object].modelViewMatrix, this.matrix, this.Objects[object].modelMatrix);
       glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix);
       glMatrix.mat4.transpose(this.Objects[object].normalMatrix, this.Objects[object].modelViewMatrix);
@@ -417,33 +400,6 @@ class RenderEngine {
       glMatrix.mat4.transpose(this.Objects[object].normalMatrix, this.Objects[object].modelViewMatrix);
       this.GL.bindTexture(this.GL.TEXTURE_2D, null);
     }
-
-    // // DRAW OBJECTS
-    // for (let object in this.Objects) {
-    //   // PERFORM OBJECT ANIMATIONS
-    //   this.Objects[object].modelMatrix = glMatrix.mat4.create();
-    //   this.Objects[object].modelViewMatrix = glMatrix.mat4.create();
-    //   this.Objects[object].drawableObject.Animate();
-
-    //   glMatrix.mat4.multiply(this.Objects[object].modelViewMatrix, this.viewMatrix, this.Objects[object].modelMatrix);
-    //   glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix,);
-    //   glMatrix.mat4.transpose(this.normalMatrix, this.Objects[object].modelViewMatrix);
-
-    //   // MULTIPLY OBJECT INTO THE VIEW PROJECTION AND PUT INTO THE WORLD
-    //   glMatrix.mat4.multiply(
-    //     this.matrix,
-    //     this.viewProjectionMatrix,
-    //     this.Objects[object].modelMatrix
-    //   );      
-
-    //   // SET THE TEXTURE FOR THE OBJECT
-    //   this.GL.activeTexture(this.GL.TEXTURE0);
-    //   this.GL.bindTexture(this.GL.TEXTURE_2D, this.Objects[object].drawableObject.texture);
-
-    //   // DRAW THE OBJECt
-    //   this.Objects[object].drawableObject.Draw();
-    //   this.GL.bindTexture(this.GL.TEXTURE_2D, null);
-    // }
 
     // HANDLE KEY INPUTS
     if (this.keysPressed['87'] || this.keysPressed['83']) {
@@ -558,5 +514,13 @@ class RenderEngine {
    */
   SetObjectAnimate(name, animation) {
     this.Objects[name].drawableObject.Animate = animation;
+  }
+
+  /**
+   * This function can set the position of the global light source
+   * @param {Array.Float} pos the new position that the light source should be
+   */
+  SetLightPosition(pos) {
+    this.lightPosition = pos;
   }
 }

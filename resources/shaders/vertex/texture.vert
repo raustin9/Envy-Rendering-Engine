@@ -10,16 +10,11 @@ attribute vec3 aBarycentricCoord;
 
 varying highp vec2 vFragmentTextureCoord;
 varying vec3 vertPos;
-varying vec3 normalInterp;
-varying vec3 vLighting;
 varying vec4 transformedNormal;
 
 uniform mat4 uMatrix;
 uniform mat4 uNormalMatrix;
-uniform mat4 uModelViewMatrix;
 uniform mat4 uWorldViewProjection;
-uniform mat4 uWorldInverseTranspose;
-uniform vec3 uLightPosition;
 
 
 void main() {

@@ -2,6 +2,7 @@
 // THE ENGINE WILL CREATE THE GL CONTEXT AND HENDLE RENDERING
 let canvas = document.getElementById("main-canvas");
 const engine = new RenderEngine(canvas);
+engine.SetLightPosition([300, 2, 5])
 
 let fighterMap = {
   name: 'fighter',
@@ -23,9 +24,7 @@ engine.CreateObject(
   fighterMap
 ).then(() => {
   engine.SetObjectAnimate("fighter", () => {
-    // engine.Translate("fighter", [0, 0, 0]);
-    
-    engine.Spin("fighter", [0,1,0], 2);
+    engine.Spin("fighter", [0,1,0], 0.5);
     engine.Rotate("fighter", [1, 0, 0], 3 * Math.PI / 2);
   });
 });
@@ -36,6 +35,7 @@ engine.CreateObject(
   engine.SetObjectAnimate("planet", () => {
     engine.Translate("planet", [-200, 500, -5000]);
     engine.Scale("planet", [3000, 3000, 3000]);
+    engine.Rotate("planet", [1, 1, 0], Math.PI / 2);
     engine.Spin("planet", [0, 1, 0], 0.008);
   })
 });

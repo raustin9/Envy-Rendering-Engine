@@ -10,7 +10,7 @@ uniform sampler2D sampler;
 uniform vec3 uLightPosition;
 
 void main() {
-  float shininess = 10.0;
+  float shininess = 5.0;
   vec3 N = normalize(transformedNormal.xyz);
   vec3 L = normalize(uLightPosition);
 
