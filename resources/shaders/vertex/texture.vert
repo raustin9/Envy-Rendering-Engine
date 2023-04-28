@@ -11,17 +11,24 @@ attribute vec3 aBarycentricCoord;
 varying highp vec2 vFragmentTextureCoord;
 varying vec3 vertPos;
 varying vec3 normalInterp;
+varying vec3 vLighting;
+varying vec4 transformedNormal;
 
 uniform mat4 uMatrix;
 uniform mat4 uNormalMatrix;
 uniform mat4 uModelViewMatrix;
+uniform mat4 uWorldViewProjection;
+uniform mat4 uWorldInverseTranspose;
+uniform vec3 uLightPosition;
+
 
 void main() {
-  vec4 vertPos4 = uModelViewMatrix * aVertexPosition;
+  vec4 vertPos4 = uWorldViewProjection * aVertexPosition;
   vertPos = vec3(vertPos4) / vertPos4.w;
-  normalInterp = vec3(uNormalMatrix * vec4(aVertexNormal, 0.0));
 
-  gl_Position = uMatrix * aVertexPosition;
+  transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
+
+  gl_Position = uWorldViewProjection * aVertexPosition;
 
   vec3 temp = aBarycentricCoord * vec3(aVertexColor);
   vFragmentTextureCoord = aVertexTexCoord;

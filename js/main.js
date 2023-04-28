@@ -25,8 +25,8 @@ engine.CreateObject(
   engine.SetObjectAnimate("fighter", () => {
     // engine.Translate("fighter", [0, 0, 0]);
     
-    // engine.Spin("fighter", [0,1,0.5], 2);
-    engine.Rotate("fighter", [1, 0, 0], 3 * Math.PI / 2);
+    engine.Spin("fighter", [0,1,0], 2);
+    engine.Rotate("fighter", [0, 0, 0], 3 * Math.PI / 2);
   });
 });
 
@@ -36,6 +36,6 @@ engine.CreateObject(
   engine.SetObjectAnimate("planet", () => {
     engine.Translate("planet", [-200, 500, -5000]);
     engine.Scale("planet", [3000, 3000, 3000]);
-    engine.Spin("planet", [0, 1, 0], 0.008);
+    engine.Spin("planet", [0, 1, 0], 2);
   })
 });

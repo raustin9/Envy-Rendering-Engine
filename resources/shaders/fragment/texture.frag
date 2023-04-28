@@ -3,16 +3,16 @@
 precision highp float;
 
 varying highp vec2 vFragmentTextureCoord;
-varying vec3 normalInterp;
 varying vec3 vertPos;
+varying vec4 transformedNormal;
 
 uniform sampler2D sampler;
+uniform vec3 uLightPosition;
 
 void main() {
-  float shininess = 40.0;
-  vec3 lightPos = vec3(-100.0, 10.0, 0.0);
-  vec3 N = normalize(normalInterp);
-  vec3 L = normalize(lightPos - vertPos);
+  float shininess = 10.0;
+  vec3 N = normalize(transformedNormal.xyz);
+  vec3 L = normalize(uLightPosition);
 
   float lambertian = max(dot(N, L), 0.0);
   float specular = 0.0;
@@ -23,8 +23,19 @@ void main() {
     specular = pow(specAngle, shininess);
   }
 
+  highp vec3 directionalLightColor = vec3(1,1,1);
+  highp vec3 directionalVector = normalize(vec3(uLightPosition));
+
+  highp float directional = max(
+    dot(normalize(transformedNormal.xyz), directionalVector), 0.0
+  );
+
+  vec3 lighting = (directionalLightColor * directional);
+
   vec4 texColor = texture2D(sampler, vFragmentTextureCoord);
-  gl_FragColor = texColor +
-                 lambertian * texColor +
-                 specular * vec4(1.0, 1.0, 1.0, 1.0);
+  gl_FragColor = vec4(
+    texColor.rgb + 
+    texColor.rbg * lighting +
+    specular * vec3(1,1,1)
+    , texColor.a);
 }

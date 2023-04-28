@@ -15,6 +15,11 @@ class RenderEngine {
   viewProjectionMatrix = glMatrix.mat4.create();
   normalMatrix = glMatrix.mat4.create();
   matrix = glMatrix.mat4.create();
+  worldViewProjection = glMatrix.mat4.create();
+  worldInverse = glMatrix.mat4.create();
+  worldInverseTranspose = glMatrix.mat4.create();
+
+  lightPosition = [-6, 5, 2];
 
   then = 0;       // used for keeping time
   globalTime = 0; // total time passed
@@ -90,6 +95,11 @@ class RenderEngine {
     event.preventDefault();
   }
 
+  /**
+   * This function loads a texture and creates a gl texture from it
+   * @param {String} src source file to load texture from
+   * @returns WebglContext texture2d
+   */
   LoadTexture(src) {
     const texture = this.GL.createTexture();
     this.GL.bindTexture(this.GL.TEXTURE_2D, texture);
@@ -145,6 +155,11 @@ class RenderEngine {
     return texture;
   }
 
+  /**
+   * This function creates an instance of an object from the values in the parameter, and then adds it to 
+   * the list of objects to be rendered
+   * @param {JSON.Object} sourceMap map of values that are used to create an object to be rendered
+   */
   async CreateObject(sourceMap) {
     if (!sourceMap.name) {
       throw new Error("ENGINE: ERROR -- OBJECT DOES NOT HAVE NAME");
@@ -223,6 +238,9 @@ class RenderEngine {
       'uNormalMatrix',
       'uModelViewMatrix',
       'sampler',
+      'uWorldViewProjection',
+      'uWorldInverseTranspose',
+      'uLightPosition'
     ]);
 
     object.UniformSetup = () => {
@@ -237,13 +255,30 @@ class RenderEngine {
       this.GL.uniformMatrix4fv(
         object.uniformLocations.uNormalMatrix,
         false,
-        this.normalMatrix
+        this.Objects[objectName].normalMatrix
       );
 
       this.GL.uniformMatrix4fv(
         object.uniformLocations.uModelViewMatrix,
         false,
         this.Objects[objectName].modelViewMatrix
+      );
+
+      this.GL.uniformMatrix4fv(
+        object.uniformLocations.uWorldViewProjection,
+        false,
+        this.worldViewProjection
+      );
+
+      this.GL.uniformMatrix4fv(
+        object.uniformLocations.uWorldInverseTranspose,
+        false,
+        this.worldInverseTranspose
+      );
+
+      this.GL.uniform3fv(
+        object.uniformLocations.uLightPosition,
+        this.lightPosition
       );
 
       // SAMPLER2D
@@ -258,9 +293,16 @@ class RenderEngine {
       modelMatrix: glMatrix.mat4.create(),
       texture: texture,
       modelViewMatrix: glMatrix.mat4.create(),
+      normalMatrix: glMatrix.mat4.create(),
     }
   }
 
+  /**
+   * 
+   * @param {String} vSrc source of the vertex shader to load
+   * @param {String} fSrc source of the fragment shader to load
+   * @param {String} oSrc source of the object file to load
+   */
   async LoadResources(vSrc, fSrc, oSrc) {
     vertSource = await loadNetworkResourceAsText(vSrc);     // VERTEX SHADER
     fragSource = await loadNetworkResourceAsText(fSrc);   // FRAGMENT SHADER
@@ -293,6 +335,19 @@ class RenderEngine {
     this.GL.enable(this.GL.CULL_FACE);
 
     this.GL.clear(this.GL.COLOR_BUFFER_BIT | this.GL.DEPTH_BUFFER_BIT);
+
+    const fieldOfView = (45 * Math.PI) / 180;
+    const aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
+    const nearCull = 0.1;
+    const farCull = 100000.0;
+    this.projectionMatrix = glMatrix.mat4.create();
+    glMatrix.mat4.perspective(
+      this.projectionMatrix,
+      fieldOfView,
+      aspectRatio,
+      nearCull,
+      farCull
+    );
 
     this.cameraMatrix = glMatrix.mat4.create();
     this.viewMatrix = glMatrix.mat4.create();
@@ -327,26 +382,30 @@ class RenderEngine {
       this.viewMatrix
     );
 
+    this.matrix = glMatrix.mat4.create();
+    glMatrix.mat4.multiply(this.worldViewProjection, this.viewProjectionMatrix, this.matrix);
+    glMatrix.mat4.invert(this.worldInverse, this.matrix);
+    glMatrix.mat4.transpose(this.worldInverseTranspose, this.worldInverse);
+
     // DRAW OBJECTS
     for (let object in this.Objects) {
       // PERFORM OBJECT ANIMATIONS
       this.Objects[object].modelMatrix = glMatrix.mat4.create();
+      this.Objects[object].modelViewMatrix = glMatrix.mat4.create();
+      this.Objects[object].normalMatrix = glMatrix.mat4.create();
       this.Objects[object].drawableObject.Animate();
-
-      glMatrix.mat4.multiply(this.Objects[object].modelViewMatrix, this.viewMatrix, this.Objects[object].modelMatrix);
-      glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix,);
-      glMatrix.mat4.transpose(this.normalMatrix, this.Objects[object].modelViewMatrix);
+      // this.Objects[object].drawableObject.Animate();
+      glMatrix.mat4.multiply(this.Objects[object].modelViewMatrix, this.matrix, this.Objects[object].modelMatrix);
+      glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix);
+      glMatrix.mat4.transpose(this.Objects[object].normalMatrix, this.Objects[object].modelViewMatrix);
+      
 
       // MULTIPLY OBJECT INTO THE VIEW PROJECTION AND PUT INTO THE WORLD
       glMatrix.mat4.multiply(
-        this.matrix,
+        this.worldViewProjection,
         this.viewProjectionMatrix,
         this.Objects[object].modelMatrix
-      );
-      
-      // FIND NORMAL MATRIX
-      // this.Objects[object].modelViewMatrix = glMatrix.mat4.create();
-      
+      );      
 
       // SET THE TEXTURE FOR THE OBJECT
       this.GL.activeTexture(this.GL.TEXTURE0);
@@ -354,8 +413,37 @@ class RenderEngine {
 
       // DRAW THE OBJECt
       this.Objects[object].drawableObject.Draw();
+      glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix,);
+      glMatrix.mat4.transpose(this.Objects[object].normalMatrix, this.Objects[object].modelViewMatrix);
       this.GL.bindTexture(this.GL.TEXTURE_2D, null);
     }
+
+    // // DRAW OBJECTS
+    // for (let object in this.Objects) {
+    //   // PERFORM OBJECT ANIMATIONS
+    //   this.Objects[object].modelMatrix = glMatrix.mat4.create();
+    //   this.Objects[object].modelViewMatrix = glMatrix.mat4.create();
+    //   this.Objects[object].drawableObject.Animate();
+
+    //   glMatrix.mat4.multiply(this.Objects[object].modelViewMatrix, this.viewMatrix, this.Objects[object].modelMatrix);
+    //   glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix,);
+    //   glMatrix.mat4.transpose(this.normalMatrix, this.Objects[object].modelViewMatrix);
+
+    //   // MULTIPLY OBJECT INTO THE VIEW PROJECTION AND PUT INTO THE WORLD
+    //   glMatrix.mat4.multiply(
+    //     this.matrix,
+    //     this.viewProjectionMatrix,
+    //     this.Objects[object].modelMatrix
+    //   );      
+
+    //   // SET THE TEXTURE FOR THE OBJECT
+    //   this.GL.activeTexture(this.GL.TEXTURE0);
+    //   this.GL.bindTexture(this.GL.TEXTURE_2D, this.Objects[object].drawableObject.texture);
+
+    //   // DRAW THE OBJECt
+    //   this.Objects[object].drawableObject.Draw();
+    //   this.GL.bindTexture(this.GL.TEXTURE_2D, null);
+    // }
 
     // HANDLE KEY INPUTS
     if (this.keysPressed['87'] || this.keysPressed['83']) {
@@ -385,6 +473,11 @@ class RenderEngine {
     }
   }
 
+  /**
+   * 
+   * @param {String} name name of the object to transform
+   * @param {Array.FLoat} vector the vector to translate the object by
+   */
   Translate(name, vector) {
     glMatrix.mat4.translate(
       this.Objects[name].modelMatrix,
@@ -393,6 +486,12 @@ class RenderEngine {
     );
   }
 
+  /**
+   * 
+   * @param {String} name name of the object to transform
+   * @param {Array.Float} axis axis to rotate the object around
+   * @param {Float} angle the angle IN RADIANS by which to rotate the object
+   */
   Rotate(name, axis, angle) {
     glMatrix.mat4.rotate(
       this.Objects[name].modelMatrix,
@@ -402,6 +501,12 @@ class RenderEngine {
     );
   }
 
+  /**
+   * 
+   * @param {String} name name of the object to transform
+   * @param {Array.Float} axis axis to spin the object around
+   * @param {Number} speed the speed to spin the object at
+   */
   Spin(name, axis, speed) {
     glMatrix.mat4.rotate(
       this.Objects[name].modelMatrix,
@@ -411,6 +516,12 @@ class RenderEngine {
     );
   }
 
+  /**
+   * 
+   * @param {String} name name of the object to transform
+   * @param {Array.Float} axis axis to revolve object around
+   * @param {Number} speed speed to revolve at
+   */
   Revolve(name, axis, speed) {
     glMatrix.mat4.translate(
       this.Objects[name].modelMatrix,
@@ -423,6 +534,11 @@ class RenderEngine {
     );
   }
 
+  /**
+   * 
+   * @param {String} name name of the object to transform
+   * @param {Array.Flaot} vector vector to scale the object by
+   */
   Scale(name, vector) {
     if (vector.length != 3) {
       throw new Error('SCALE: ERROR -- SCALING VECTOR DOES NOT HAVE 3 ELEMENTS');
@@ -434,6 +550,12 @@ class RenderEngine {
     );
   }
 
+  /**
+   * This function will be called every time the screen is rerendered
+   * It should contain transformations that you want your object to have done
+   * @param {String} name name of the object to set the animation for
+   * @param {Function} animation the function that contains all of the animations/transformations
+   */
   SetObjectAnimate(name, animation) {
     this.Objects[name].drawableObject.Animate = animation;
   }
