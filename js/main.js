@@ -1,171 +1,41 @@
 // GET CANVAS CONTEXT TO PASS TO THE ENGINE
 // THE ENGINE WILL CREATE THE GL CONTEXT AND HENDLE RENDERING
 let canvas = document.getElementById("main-canvas");
-vertSource = null;
-fragSource = null;
-oData = null;
-let myshader = null;
 const engine = new RenderEngine(canvas);
 
+let fighterMap = {
+  name: 'fighter',
+  vertexSource: 'resources/shaders/vertex/texture.vert',
+  fragmentSource: 'resources/shaders/fragment/texture.frag',
+  objectSource: 'resources/models/fighter.obj',
+  textureSource: 'resources/textures/spaceshiptex.jpg'
+};
 
-LoadResources(
-  'resources/shaders/vertex/bary300.vert',
-  'resources/shaders/fragment/bary300.frag',
-  'resources/models/fighter.obj'
+let planetMap = {
+  name: 'planet',
+  vertexSource: 'resources/shaders/vertex/texture.vert',
+  fragmentSource: 'resources/shaders/fragment/texture.frag',
+  objectSource: 'resources/models/sphereT.obj',
+  textureSource: 'resources/textures/planet.jpg'
+}
+
+engine.CreateObject(
+  fighterMap
 ).then(() => {
-  let obj = InitializeFighter(vertSource, fragSource, oData);
-  engine.AddObject(obj);
+  engine.SetObjectAnimate("fighter", () => {
+    // engine.Translate("fighter", [0, 0, 0]);
+    
+    // engine.Spin("fighter", [0,1,0.5], 2);
+    engine.Rotate("fighter", [1, 0, 0], 3 * Math.PI / 2);
+  });
 });
 
-LoadResources(
-  'resources/shaders/vertex/bary300.vert',
-  'resources/shaders/fragment/bary300.frag',
-  'resources/models/DROPSHIP.obj'
+engine.CreateObject(
+  planetMap
 ).then(() => {
-  let object = InitializeDropship(vertSource, fragSource, oData);
-  engine.AddObject(object);
+  engine.SetObjectAnimate("planet", () => {
+    engine.Translate("planet", [-200, 500, -5000]);
+    engine.Scale("planet", [3000, 3000, 3000]);
+    engine.Spin("planet", [0, 1, 0], 0.008);
+  })
 });
-
-
-
-async function LoadResources(vSrc, fSrc, oSrc) {
-  vertSource = await loadNetworkResourceAsText(vSrc);     // VERTEX SHADER
-  fragSource = await loadNetworkResourceAsText(fSrc);   // FRAGMENT SHADER
-  oData = await loadNetworkResourceAsText(oSrc);
-}
-
-function InitializeDropship(vertSource, fragSource, oData) {
-  let shader = new Shader(
-    engine.GL,
-    vertSource,
-    fragSource
-  );
-  
-  let parsedData = new OBJData(oData);
-  let rawData = parsedData.getFlattenedDataFromModelAtIndex(0);
-
-  let vertexPositionBuffer = new VertexData(
-    engine.GL,
-    rawData.vertices,
-    engine.GL.FLOAT,
-    3
-  );
-  let vertexNormalBuffer = new VertexData(
-    engine.GL,
-    rawData.normals,
-    engine.GL.FLOAT,
-    3
-  );
-  let vertexTexCoordBuffer = new VertexData (
-    engine.GL,
-    rawData.uvs,
-    engine.GL.FLOAT,
-    2
-  );
-  
-  let vertexBarycentricBuffer = new VertexData (
-    engine.GL,
-    rawData.barycentricCoords,
-    engine.GL.FLOAT,
-    3
-  );
-
-  let attributeBufferMap = {
-    'aVertexPosition': vertexPositionBuffer,
-    'aBarycentricCoord': vertexBarycentricBuffer,
-    // 'aVertexNormal'    : vertexNormalBuffer,
-    // 'aVertexTexCoord'  : vertexTexCoordBuffer
-  }
-
-  obj = new DrawableObject(
-    engine.GL,
-    shader,
-    attributeBufferMap,
-    null,
-    rawData.vertices.length / 3,
-  );
-
-  obj.uniformLocations = shader.GetUniformLocations([
-    'uMatrix'
-  ]);
-  
-  // obj.UniformSetup = () => {
-  //   engine.GL.uniformMatrix4fv(
-  //     obj.uniformLocations.uMatrix,
-  //     false,
-  //     engine.matrix
-  //   );
-  // }
-
-  // engine.AddObject(obj);
-
-  return obj;
-}
-
-function InitializeFighter(vertSource, fragSource, oData) {
-  let shader = new Shader(
-    engine.GL,
-    vertSource,
-    fragSource
-  );
-  
-  let parsedData = new OBJData(oData);
-  let rawData = parsedData.getFlattenedDataFromModelAtIndex(0);
-
-  let vertexPositionBuffer = new VertexData(
-    engine.GL,
-    rawData.vertices,
-    engine.GL.FLOAT,
-    3
-  );
-  let vertexNormalBuffer = new VertexData(
-    engine.GL,
-    rawData.normals,
-    engine.GL.FLOAT,
-    3
-  );
-  let vertexTexCoordBuffer = new VertexData (
-    engine.GL,
-    rawData.uvs,
-    engine.GL.FLOAT,
-    2
-  );
-  
-  let vertexBarycentricBuffer = new VertexData (
-    engine.GL,
-    rawData.barycentricCoords,
-    engine.GL.FLOAT,
-    3
-  );
-
-  let attributeBufferMap = {
-    'aVertexPosition': vertexPositionBuffer,
-    'aBarycentricCoord': vertexBarycentricBuffer,
-    // 'aVertexNormal'    : vertexNormalBuffer,
-    // 'aVertexTexCoord'  : vertexTexCoordBuffer
-  }
-
-  obj = new DrawableObject(
-    engine.GL,
-    shader,
-    attributeBufferMap,
-    null,
-    rawData.vertices.length / 3,
-  );
-
-  obj.uniformLocations = shader.GetUniformLocations([
-    'uMatrix'
-  ]);
-  
-  // obj.UniformSetup = () => {
-  //   engine.GL.uniformMatrix4fv(
-  //     obj.uniformLocations.uMatrix,
-  //     false,
-  //     engine.matrix
-  //   );
-  // }
-
-  // engine.AddObject(obj);
-
-  return obj;
-}

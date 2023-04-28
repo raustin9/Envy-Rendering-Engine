@@ -5,7 +5,7 @@ class RenderEngine {
   canvas = null; // canvas element
   GL = null;     // webGL2 context
 
-  Objects = []; // List of objectst to be rendered
+  Objects = {}; // List of objectst to be rendered
 
   // MATRICES
   projectionMatrix = glMatrix.mat4.create();
@@ -13,6 +13,7 @@ class RenderEngine {
   cameraMatrix = glMatrix.mat4.create();
   viewMatrix = glMatrix.mat4.create();
   viewProjectionMatrix = glMatrix.mat4.create();
+  normalMatrix = glMatrix.mat4.create();
   matrix = glMatrix.mat4.create();
 
   then = 0;       // used for keeping time
@@ -21,11 +22,9 @@ class RenderEngine {
   cameraVals = [0,0,6];  // used to move the camera around via translation
   cameraAngle = 0;       // used to change the angle of the camera via rotation
   cameraElevation = 0;   // used to angle the camera up and down
-  moveSpeed = 10;        // the speed that the camera can move around
-  turnSpeed = 1.5;       // the speed that the camera can turn
+  moveSpeed = 7;        // the speed that the camera can move around
+  turnSpeed = 1;       // the speed that the camera can turn
   keysPressed = {};      // keeps track of whick keys have been pressed
-
-  modelMatrices = [];
 
   init = null;
 
@@ -64,7 +63,7 @@ class RenderEngine {
     const fieldOfView = (45 * Math.PI) / 180;
     const aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
     const nearCull = 0.1;
-    const farCull = 100.0;
+    const farCull = 100000.0;
     this.projectionMatrix = glMatrix.mat4.create();
     glMatrix.mat4.perspective(
       this.projectionMatrix,
@@ -91,20 +90,89 @@ class RenderEngine {
     event.preventDefault();
   }
 
-  /**
-   * Used to initialize an instance of an object to be rendered and appends it to global list
-   * @param {String} vertSource source code of vertex shader for the object
-   * @param {String} fragSource source code of fragment shader for object
-   * @param {String} objectData source file string for .obj file for object
-   */
-  InitializeObject(vertSource, fragSource, objectData) {
-    let shader = new Shader(
-      this.GL, 
-      vertSource, 
-      fragSource
+  LoadTexture(src) {
+    const texture = this.GL.createTexture();
+    this.GL.bindTexture(this.GL.TEXTURE_2D, texture);
+  
+    const level = 0;
+    const internalFormat = this.GL.RGBA;
+    const width = 1;
+    const height = 1;
+    const border = 0;
+    const srcFormat = this.GL.RGBA;
+    const srcType = this.GL.UNSIGNED_BYTE;
+    const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
+    this.GL.texImage2D(
+      this.GL.TEXTURE_2D,
+      level,
+      internalFormat,
+      width,
+      height,
+      border,
+      srcFormat,
+      srcType,
+      pixel
     );
-    
-    let parsedData = new OBJData(objectData);
+  
+    const image = new Image();
+    console.log(image);
+    image.onload = () => {
+      this.GL.bindTexture(this.GL.TEXTURE_2D, texture);
+      this.GL.texImage2D(
+        this.GL.TEXTURE_2D,
+        level,
+        internalFormat,
+        srcFormat,
+        srcType,
+        image
+      );
+  
+      if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+        // Yes, it's a power of 2. Generate mips.
+        this.GL.generateMipmap(this.GL.TEXTURE_2D);
+      } else {
+        // No, it's not a power of 2. Turn off mips and set
+        // wrapping to clamp to edge
+        this.GL.texParameteri(this.GL.TEXTURE_2D, this.GL.TEXTURE_WRAP_S, this.GL.CLAMP_TO_EDGE);
+        this.GL.texParameteri(this.GL.TEXTURE_2D, this.GL.TEXTURE_WRAP_T, this.GL.CLAMP_TO_EDGE);
+        this.GL.texParameteri(this.GL.TEXTURE_2D, this.GL.TEXTURE_MIN_FILTER, this.GL.LINEAR);
+      }
+    };
+    image.src = src;
+
+    this.GL.bindTexture(this.GL.TEXTURE_2D, null);
+  
+    return texture;
+  }
+
+  async CreateObject(sourceMap) {
+    if (!sourceMap.name) {
+      throw new Error("ENGINE: ERROR -- OBJECT DOES NOT HAVE NAME");
+    }
+    if (!sourceMap.vertexSource) {
+      throw new Error("ENGINE: ERROR -- THIS OBJECT DOES NOT HAVE VERTEX SHADER");
+    }
+    if (!sourceMap.fragmentSource) {
+      throw new Error("ENGINE: ERROR -- THIS OBJECT DOES NOT HAVE FRAGMENT SHADER");
+    }
+    if (!sourceMap.objectSource) {
+      throw new Error("ENGINE: ERROR -- THIS OBJECT DOES NOT HAVE OBJECT DATA");
+    }
+    if (!sourceMap.textureSource) {
+      console.warn("ENGINE: WARN -- THIS OBJECT DOES NOT HAVE TEXTURE DATA");
+    }
+
+    let objectName = sourceMap.name;
+    let vertexSource = await loadNetworkResourceAsText(sourceMap.vertexSource);     // VERTEX SHADER
+    let fragmentSource = await loadNetworkResourceAsText(sourceMap.fragmentSource);   // FRAGMENT SHADER
+    let oData = await loadNetworkResourceAsText(sourceMap.objectSource);
+    let texture = this.LoadTexture(sourceMap.textureSource);
+    this.GL.pixelStorei(this.GL.UNPACK_FLIP_Y_WEBGL, true);
+
+
+    let shader = new Shader(this.GL, vertexSource, fragmentSource);
+
+    let parsedData = new OBJData(oData);
     let rawData = parsedData.getFlattenedDataFromModelAtIndex(0);
 
     let vertexPositionBuffer = new VertexData(
@@ -136,32 +204,67 @@ class RenderEngine {
     let attributeBufferMap = {
       'aVertexPosition': vertexPositionBuffer,
       'aBarycentricCoord': vertexBarycentricBuffer,
-      // 'aVertexNormal'    : vertexNormalBuffer,
-      // 'aVertexTexCoord'  : vertexTexCoordBuffer
+      'aVertexNormal'    : vertexNormalBuffer,
+      'aVertexTexCoord'  : vertexTexCoordBuffer
     }
 
-    let obj = new DrawableObject(
+    let object = new DrawableObject(
       this.GL,
       shader,
       attributeBufferMap,
       null,
-      rawData.vertices.length / 3
+      rawData.vertices.length / 3,
     );
 
-    obj.uniformLocations = shader.GetUniformLocations([
-      'uMatrix'
+    object.texture = texture;
+
+    object.uniformLocations = shader.GetUniformLocations([
+      'uMatrix',
+      'uNormalMatrix',
+      'uModelViewMatrix',
+      'sampler',
     ]);
-    
-    obj.UniformSetup = () => {
+
+    object.UniformSetup = () => {
+      // WORLD MATRIX
       this.GL.uniformMatrix4fv(
-        obj.uniformLocations.uMatrix,
+        object.uniformLocations.uMatrix,
         false,
         this.matrix
       );
+
+      // NORMAL MATRIX
+      this.GL.uniformMatrix4fv(
+        object.uniformLocations.uNormalMatrix,
+        false,
+        this.normalMatrix
+      );
+
+      this.GL.uniformMatrix4fv(
+        object.uniformLocations.uModelViewMatrix,
+        false,
+        this.Objects[objectName].modelViewMatrix
+      );
+
+      // SAMPLER2D
+      this.GL.uniform1i(
+        object.uniformLocations.sampler,
+        0
+      );
     }
 
-    // Append object to list of objects to be rendered
-    this.Objects.push(obj);
+    this.Objects[objectName] = {
+      drawableObject: object,
+      modelMatrix: glMatrix.mat4.create(),
+      texture: texture,
+      modelViewMatrix: glMatrix.mat4.create(),
+    }
+  }
+
+  async LoadResources(vSrc, fSrc, oSrc) {
+    vertSource = await loadNetworkResourceAsText(vSrc);     // VERTEX SHADER
+    fragSource = await loadNetworkResourceAsText(fSrc);   // FRAGMENT SHADER
+    oData = await loadNetworkResourceAsText(oSrc);
   }
 
   /**
@@ -191,24 +294,8 @@ class RenderEngine {
 
     this.GL.clear(this.GL.COLOR_BUFFER_BIT | this.GL.DEPTH_BUFFER_BIT);
 
-    // const fieldOfView = (45 * Math.PI) / 180;
-    // const aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
-    // const nearCull = 0.1;
-    // const farCull = 100.0;
-    // this.projectionMatrix = glMatrix.mat4.create();
-    // this.modelViewMatrix = glMatrix.mat4.create();
     this.cameraMatrix = glMatrix.mat4.create();
     this.viewMatrix = glMatrix.mat4.create();
-    // this.viewProjectionMatrix = glMatrix.mat4.create();
-
-    // CREATE PROJECTION MATRIX
-    // glMatrix.mat4.perspective(
-    //   this.projectionMatrix,
-    //   fieldOfView,
-    //   aspectRatio,
-    //   nearCull,
-    //   farCull
-    // );
 
     // POSITION THE CAMERA MATRIX
     glMatrix.mat4.translate(
@@ -240,63 +327,34 @@ class RenderEngine {
       this.viewMatrix
     );
 
-    for (let i = 0; i < this.Objects.length; i++) {
-      this.modelMatrices.push(glMatrix.mat4.create());
-    }
-    // POSITION THE MODEL VIEW MATRIX
-    // glMatrix.mat4.translate(
-    //   this.modelViewMatrix,
-    //   this.modelViewMatrix,
-    //   [0.0, 0.0, 0.0]
-    // );
-
-    /// ROTATE CUBE
-    // glMatrix.mat4.rotate(
-    //   this.modelViewMatrix,
-    //   this.modelViewMatrix,
-    //   this.globalTime,
-    //   [0,0,1] // rotation axis
-    // );
-    // glMatrix.mat4.rotate(
-    //   this.modelViewMatrix,
-    //   this.modelViewMatrix,
-    //   this.globalTime * 0.6,
-    //   [0,1,0] // rotation axis
-    // );
-    // glMatrix.mat4.rotate(
-    //   this.modelViewMatrix,
-    //   this.modelViewMatrix,
-    //   3 * Math.PI / 2,
-    //   [1,0,0] // rotation axis
-    // );
-
-    // glMatrix.mat4.translate(
-    //   this.modelViewMatrix,
-    //   this.modelViewMatrix,
-    //   [0.0, 0.0, 0.0]
-    // );
-
-    // glMatrix.mat4.multiply(
-    //   this.matrix, 
-    //   this.viewProjectionMatrix, 
-    //   this.modelViewMatrix
-    // );
-
     // DRAW OBJECTS
-    for (let i = 0; i < this.Objects.length; i++) {
+    for (let object in this.Objects) {
+      // PERFORM OBJECT ANIMATIONS
+      this.Objects[object].modelMatrix = glMatrix.mat4.create();
+      this.Objects[object].drawableObject.Animate();
+
+      glMatrix.mat4.multiply(this.Objects[object].modelViewMatrix, this.viewMatrix, this.Objects[object].modelMatrix);
+      glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix,);
+      glMatrix.mat4.transpose(this.normalMatrix, this.Objects[object].modelViewMatrix);
+
+      // MULTIPLY OBJECT INTO THE VIEW PROJECTION AND PUT INTO THE WORLD
       glMatrix.mat4.multiply(
         this.matrix,
         this.viewProjectionMatrix,
-        this.modelMatrices[i]
+        this.Objects[object].modelMatrix
       );
-      this.Objects[i].UniformSetup = () => {
-        engine.GL.uniformMatrix4fv(
-          this.Objects[i].uniformLocations.uMatrix,
-          false,
-          this.matrix
-        );
-      }
-      this.Objects[i].Draw();
+      
+      // FIND NORMAL MATRIX
+      // this.Objects[object].modelViewMatrix = glMatrix.mat4.create();
+      
+
+      // SET THE TEXTURE FOR THE OBJECT
+      this.GL.activeTexture(this.GL.TEXTURE0);
+      this.GL.bindTexture(this.GL.TEXTURE_2D, this.Objects[object].drawableObject.texture);
+
+      // DRAW THE OBJECt
+      this.Objects[object].drawableObject.Draw();
+      this.GL.bindTexture(this.GL.TEXTURE_2D, null);
     }
 
     // HANDLE KEY INPUTS
@@ -327,17 +385,56 @@ class RenderEngine {
     }
   }
 
-  AddObject(object) {
-    this.Objects.push(object);
+  Translate(name, vector) {
+    glMatrix.mat4.translate(
+      this.Objects[name].modelMatrix,
+      this.Objects[name].modelMatrix,
+      vector
+    );
   }
 
-  /**
-   * Used to load the resources for objects
-   */
-  // async LoadResources() {
-  //   let vertSource = await loadNetworkResourceAsText('resources/shaders/vertex/bary300.vert');     // VERTEX SHADER
-  //   let fragSource = await loadNetworkResourceAsText('resources/shaders/fragment/bary300.frag');   // FRAGMENT SHADER
-  //   let oData = await loadNetworkResourceAsText('resources/models/fighter.obj');
-  //   this.InitializeObject(vertSource, fragSource, oData);
-  // }
+  Rotate(name, axis, angle) {
+    glMatrix.mat4.rotate(
+      this.Objects[name].modelMatrix,
+      this.Objects[name].modelMatrix,
+      angle,
+      axis
+    );
+  }
+
+  Spin(name, axis, speed) {
+    glMatrix.mat4.rotate(
+      this.Objects[name].modelMatrix,
+      this.Objects[name].modelMatrix,
+      this.globalTime * speed,
+      axis
+    );
+  }
+
+  Revolve(name, axis, speed) {
+    glMatrix.mat4.translate(
+      this.Objects[name].modelMatrix,
+      this.Objects[name].modelMatrix,
+      [
+        Math.sin(this.globalTime * speed) * axis[0],
+        Math.sin(this.globalTime * speed) * axis[1],
+        Math.sin(this.globalTime * speed) * axis[2],
+      ]
+    );
+  }
+
+  Scale(name, vector) {
+    if (vector.length != 3) {
+      throw new Error('SCALE: ERROR -- SCALING VECTOR DOES NOT HAVE 3 ELEMENTS');
+    }
+    glMatrix.mat4.scale(
+      this.Objects[name].modelMatrix,
+      this.Objects[name].modelMatrix,
+      vector
+    );
+  }
+
+  SetObjectAnimate(name, animation) {
+    this.Objects[name].drawableObject.Animate = animation;
+  }
 }

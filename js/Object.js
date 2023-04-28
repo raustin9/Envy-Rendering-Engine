@@ -9,20 +9,27 @@ class DrawableObject {
 
   vertexShader = null;
   fragmentShader = null;
-  objectData = null;
-  index = null;
+
+  modelMatrix = null;
+
+  texture = null;
 
   /**
    * uniform setup - this is a function that should be defined per drawable
    * If you are familiar with C++ and not JavaScript, treat this as a member variable
    * that is a function. 
    */
-  UniformSetup = (index) => {
+  UniformSetup = () => {
     if(!this.uniformSetupWarned) {
       console.warn('A drawable being drawn does not have a uniformSetup function.');
       this.uniformSetupWarned = true;
     }
   };
+
+  Animate = () => {
+    // DEFAULT TO DOING NO ANIMATIONS
+    // OTHERWISE, SET IT
+  }
 
   constructor(
     GL,
@@ -34,7 +41,8 @@ class DrawableObject {
   ) {
     this.shader = shader;
     this.GL = GL;
-    
+    this.modelMatrix = glMatrix.mat4.create();
+
     if (!elementBuffer && !verticesCount) {
       throw 'You must specify an element Index Buffer or vertices count!';
     }
@@ -53,10 +61,6 @@ class DrawableObject {
     } else {
       this.verticesCount = verticesCount;
     }
-  }
-
-  async LoadModelData(modelSource) {
-    let oData = await loadNetworkResourceAsText(modelSource);
   }
 
   // DRAWS DRAWABLE TO SCREEN
