@@ -24,7 +24,7 @@ void main() {
   }
 
   highp vec3 directionalLightColor = vec3(1,1,1);
-  highp vec3 directionalVector = normalize(vec3(uLightPosition - vertPos));
+  highp vec3 directionalVector = normalize(vec3(vertPos - uLightPosition));
 
   highp float directional = max(
     dot(normalize(transformedNormal.xyz), directionalVector), 0.0
@@ -34,7 +34,7 @@ void main() {
 
   vec4 texColor = texture2D(sampler, vFragmentTextureCoord);
   gl_FragColor = vec4(
-    0.15 * texColor.rgb + 
+    texColor.rgb +
     texColor.rbg * lighting +
     specular * vec3(1,1,1)
     , texColor.a);

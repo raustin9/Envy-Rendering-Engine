@@ -41,7 +41,7 @@ void main(void)
     vec3 ambient = 0.3 * albedo;
 
     // Normal mapping
-    vec3 norm = normalize(texture2D(tex_norm, frag_uv).rgb * 2.0 - 0.9);
+    vec3 norm = normalize(texture2D(tex_norm, frag_uv).rgb * 2.0 - 1.1);
     float diffuse = max(dot(light_dir, norm), 0.0);
 
     vec4 texColor = vec4(
@@ -49,7 +49,7 @@ void main(void)
     , 1.0);
 
     gl_FragColor = vec4(
-        texColor.rgb + 
+        0.15 * texColor.rgb + 
         texColor.rgb * lighting + 
         specular * vec3(1,1,1)
         ,texColor.a

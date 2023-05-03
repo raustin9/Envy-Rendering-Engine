@@ -327,14 +327,6 @@ class RenderEngine {
 
   /**
    * 
-   * @param {String} objectName name of the object that is going to be drawn
-   */
-  DrawObject(objectName) {
-
-  }
-
-  /**
-   * 
    * @param {String} vSrc source of the vertex shader to load
    * @param {String} fSrc source of the fragment shader to load
    * @param {String} oSrc source of the object file to load

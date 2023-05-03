@@ -2,7 +2,7 @@
 // THE ENGINE WILL CREATE THE GL CONTEXT AND HENDLE RENDERING
 let canvas = document.getElementById("main-canvas");
 const engine = new RenderEngine(canvas);
-engine.SetLightPosition([300, 2, 5])
+engine.SetLightPosition([20, 2, 5])
 
 let fighterMap = {
   name: 'fighter',
@@ -17,16 +17,16 @@ let planetMap = {
   vertexSource: 'resources/shaders/vertex/normal.vert',
   fragmentSource: 'resources/shaders/fragment/normal.frag',
   objectSource: 'resources/models/sphereT.obj',
-  textureSource: 'resources/textures/mars2.jpg',  
+  textureSource: 'resources/textures/mars3.jpg',  
   normalSource: 'resources/textures/bump5.jpg'
 }
 
 let sunMap = {
   name: 'sun',
-  vertexSource: 'resources/shaders/vertex/texture.vert',
-  fragmentSource: 'resources/shaders/fragment/texture.frag',
+  vertexSource: 'resources/shaders/vertex/sun.vert',
+  fragmentSource: 'resources/shaders/fragment/sun.frag',
   objectSource: 'resources/models/sphereT.obj',
-  textureSource: 'resources/textures/sun.jpg'
+  textureSource: 'resources/textures/sun.jpg',
 }
 
 let normMap = {
@@ -37,14 +37,6 @@ let normMap = {
   textureSource: 'resources/textures/mars2.jpg',
   normalSource: 'resources/textures/marsbump.jpg'
 }
-
-// engine.CreateObject(
-//   normMap
-// ).then(() => {
-//   engine.SetObjectAnimate("norm", () => {
-//     engine.Translate("norm", [0, 4, -10]);
-//   })
-// })
 
 engine.CreateObject(
   fighterMap
@@ -65,16 +57,6 @@ engine.CreateObject(
     engine.Spin("planet", [0, 1, 0], 0.5);
   })
 });
-// engine.CreateObject(
-//   planetMap
-// ).then(() => {
-//   engine.SetObjectAnimate("planet", () => {
-//     engine.Translate("planet", [2, 4, -8]);
-//     // engine.Scale("planet", [2, 2, 2]);
-//     engine.Rotate("planet", [1, 0.5, 0], Math.PI / 4);
-//     engine.Spin("planet", [0, 1, 0], 0.5);
-//   })
-// });
 
 engine.CreateObject(
   sunMap
