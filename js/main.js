@@ -17,7 +17,15 @@ let planetMap = {
   vertexSource: 'resources/shaders/vertex/texture.vert',
   fragmentSource: 'resources/shaders/fragment/texture.frag',
   objectSource: 'resources/models/sphereT.obj',
-  textureSource: 'resources/textures/tropical.png'
+  textureSource: 'resources/textures/mars2.jpg'
+}
+
+let sunMap = {
+  name: 'sun',
+  vertexSource: 'resources/shaders/vertex/texture.vert',
+  fragmentSource: 'resources/shaders/fragment/texture.frag',
+  objectSource: 'resources/models/sphereT.obj',
+  textureSource: 'resources/textures/sun.jpg'
 }
 
 engine.CreateObject(
@@ -39,3 +47,12 @@ engine.CreateObject(
     engine.Spin("planet", [0, 1, 0], 0.5);
   })
 });
+
+engine.CreateObject(
+  sunMap
+).then(() => {
+  engine.SetObjectAnimate("sun", () => {
+    engine.Translate("sun", [20000, 6000, 0]);
+    engine.Scale("sun", [1000, 1000, 1000]);
+  })
+})

@@ -47,8 +47,6 @@ class RenderEngine {
    */
   async Main() {
     this.window = window;
-    // this.canvas = document.getElementById(canvas_name);
-    // this.GL = this.canvas.getContext('webgl2');
 
     if (!this.GL) {
       console.log("ERROR: BROWSER DOES NOT SUPPORT WEBGL2");
@@ -171,23 +169,20 @@ class RenderEngine {
     if (!sourceMap.objectSource) {
       throw new Error("ENGINE: ERROR -- THIS OBJECT DOES NOT HAVE OBJECT DATA");
     }
-    if (!sourceMap.textureSource) {
-      console.warn("ENGINE: WARN -- THIS OBJECT DOES NOT HAVE TEXTURE DATA");
-    }
+
 
     let objectName = sourceMap.name;
     let vertexSource = await loadNetworkResourceAsText(sourceMap.vertexSource);     // VERTEX SHADER
     let fragmentSource = await loadNetworkResourceAsText(sourceMap.fragmentSource);   // FRAGMENT SHADER
     let oData = await loadNetworkResourceAsText(sourceMap.objectSource);
-    let texture = this.LoadTexture(sourceMap.textureSource);
-    this.GL.pixelStorei(this.GL.UNPACK_FLIP_Y_WEBGL, true);
-
+    let texture = null;
 
     let shader = new Shader(this.GL, vertexSource, fragmentSource);
 
     let parsedData = new OBJData(oData);
     let rawData = parsedData.getFlattenedDataFromModelAtIndex(0);
 
+    // CREATE OBJECT BUFFERS
     let vertexPositionBuffer = new VertexData(
       this.GL,
       rawData.vertices,
@@ -221,6 +216,7 @@ class RenderEngine {
       'aVertexTexCoord'  : vertexTexCoordBuffer
     }
 
+    // ADD NEW OBJECT TO GLOBAL LIST
     let object = new DrawableObject(
       this.GL,
       shader,
@@ -230,6 +226,29 @@ class RenderEngine {
     );
 
     object.texture = texture;
+
+    if (sourceMap.textureSource) {
+      object.texture = this.LoadTexture(sourceMap.textureSource);
+      if (sourceMap.normalSource) {
+        // NORMAL MAP
+
+        return;
+      } else if (sourceMap.environmentSource) {
+        // IS AN ENVIRONMENT MAP
+        if (sourceMap.environmentSource.length != 6) {
+          throw new Error(`ENGINE: ERROR -- THIS OBJECT'S ENVIRONMENT MAP DOES NOT HAVE EXACTLY 6 IMAGES`);
+        }
+
+        return;
+      }
+
+      // IS A NORMAL OBJECT WITH TEXTURE
+      object.TextureSetup = () => {
+        this.GL.activeTexture(this.GL.TEXTURE0);
+        this.GL.bindTexture(this.GL.TEXTURE_2D, object.texture);
+      }
+      this.GL.pixelStorei(this.GL.UNPACK_FLIP_Y_WEBGL, true);
+    } 
 
     object.uniformLocations = shader.GetUniformLocations([
       'uMatrix',
@@ -280,6 +299,14 @@ class RenderEngine {
       modelViewMatrix: glMatrix.mat4.create(),
       normalMatrix: glMatrix.mat4.create(),
     }
+  }
+
+  /**
+   * 
+   * @param {String} objectName name of the object that is going to be drawn
+   */
+  DrawObject(objectName) {
+
   }
 
   /**
@@ -388,17 +415,13 @@ class RenderEngine {
         this.worldViewProjection,
         this.viewProjectionMatrix,
         this.Objects[object].modelMatrix
-      );      
+      );
 
-      // SET THE TEXTURE FOR THE OBJECT
-      this.GL.activeTexture(this.GL.TEXTURE0);
-      this.GL.bindTexture(this.GL.TEXTURE_2D, this.Objects[object].drawableObject.texture);
-
-      // DRAW THE OBJECt
+      // DRAW THE OBJECT
       this.Objects[object].drawableObject.Draw();
+
       glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix,);
       glMatrix.mat4.transpose(this.Objects[object].normalMatrix, this.Objects[object].modelViewMatrix);
-      this.GL.bindTexture(this.GL.TEXTURE_2D, null);
     }
 
     // HANDLE KEY INPUTS

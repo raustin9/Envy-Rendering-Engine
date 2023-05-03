@@ -26,6 +26,11 @@ class DrawableObject {
     }
   };
 
+  TextureSetup = () => {
+    this.GL.activeTexture(this.GL.TEXTURE0);
+    this.GL.bindTexture(this.GL.TEXTURE_2D, this.texture);
+  }
+
   Animate = () => {
     // DEFAULT TO DOING NO ANIMATIONS
     // OTHERWISE, SET IT
@@ -65,6 +70,8 @@ class DrawableObject {
 
   // DRAWS DRAWABLE TO SCREEN
   Draw() {
+    this.TextureSetup();
+    
     if (this.elementArrayBuffer && !this.verticesCount) {
       this.elementArrayBuffer.BindAndEnable();
     }
