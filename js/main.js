@@ -14,10 +14,11 @@ let fighterMap = {
 
 let planetMap = {
   name: 'planet',
-  vertexSource: 'resources/shaders/vertex/texture.vert',
-  fragmentSource: 'resources/shaders/fragment/texture.frag',
+  vertexSource: 'resources/shaders/vertex/normal.vert',
+  fragmentSource: 'resources/shaders/fragment/normal.frag',
   objectSource: 'resources/models/sphereT.obj',
-  textureSource: 'resources/textures/mars2.jpg'
+  textureSource: 'resources/textures/mars2.jpg',  
+  normalSource: 'resources/textures/bump5.jpg'
 }
 
 let sunMap = {
@@ -27,6 +28,23 @@ let sunMap = {
   objectSource: 'resources/models/sphereT.obj',
   textureSource: 'resources/textures/sun.jpg'
 }
+
+let normMap = {
+  name: 'norm',
+  vertexSource: 'resources/shaders/vertex/normal.vert',
+  fragmentSource: 'resources/shaders/fragment/normal.frag',
+  objectSource: 'resources/models/sphereT.obj',
+  textureSource: 'resources/textures/mars2.jpg',
+  normalSource: 'resources/textures/marsbump.jpg'
+}
+
+// engine.CreateObject(
+//   normMap
+// ).then(() => {
+//   engine.SetObjectAnimate("norm", () => {
+//     engine.Translate("norm", [0, 4, -10]);
+//   })
+// })
 
 engine.CreateObject(
   fighterMap
@@ -47,6 +65,16 @@ engine.CreateObject(
     engine.Spin("planet", [0, 1, 0], 0.5);
   })
 });
+// engine.CreateObject(
+//   planetMap
+// ).then(() => {
+//   engine.SetObjectAnimate("planet", () => {
+//     engine.Translate("planet", [2, 4, -8]);
+//     // engine.Scale("planet", [2, 2, 2]);
+//     engine.Rotate("planet", [1, 0.5, 0], Math.PI / 4);
+//     engine.Spin("planet", [0, 1, 0], 0.5);
+//   })
+// });
 
 engine.CreateObject(
   sunMap

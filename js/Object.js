@@ -14,6 +14,8 @@ class DrawableObject {
 
   texture = null;
 
+  textureBuffer = [];
+
   /**
    * uniform setup - this is a function that should be defined per drawable
    * If you are familiar with C++ and not JavaScript, treat this as a member variable

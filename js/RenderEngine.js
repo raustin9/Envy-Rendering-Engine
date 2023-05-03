@@ -225,14 +225,24 @@ class RenderEngine {
       rawData.vertices.length / 3,
     );
 
-    object.texture = texture;
-
+    // SET THE TYPE OF TEXTURE THE OBJECT SHOULD HAVE
     if (sourceMap.textureSource) {
-      object.texture = this.LoadTexture(sourceMap.textureSource);
+      // object.texture = this.LoadTexture(sourceMap.textureSource);
+      
       if (sourceMap.normalSource) {
+        console.log("normal")
         // NORMAL MAP
+        
+        object.textureBuffer.push(this.LoadTexture(sourceMap.normalSource));
+        object.textureBuffer.push(this.LoadTexture(sourceMap.textureSource));
 
-        return;
+        object.TextureSetup = () => {
+          this.GL.activeTexture(this.GL.TEXTURE0);
+          this.GL.bindTexture(this.GL.TEXTURE_2D, object.textureBuffer[0]);
+        
+          this.GL.activeTexture(this.GL.TEXTURE1);
+          this.GL.bindTexture(this.GL.TEXTURE_2D, object.textureBuffer[1]);
+        }
       } else if (sourceMap.environmentSource) {
         // IS AN ENVIRONMENT MAP
         if (sourceMap.environmentSource.length != 6) {
@@ -240,13 +250,15 @@ class RenderEngine {
         }
 
         return;
+      } else {
+        object.textureBuffer.push(this.LoadTexture(sourceMap.textureSource));
+        object.TextureSetup = () => {
+          this.GL.activeTexture(this.GL.TEXTURE0);
+          this.GL.bindTexture(this.GL.TEXTURE_2D, object.textureBuffer[0]);
+        }
       }
 
       // IS A NORMAL OBJECT WITH TEXTURE
-      object.TextureSetup = () => {
-        this.GL.activeTexture(this.GL.TEXTURE0);
-        this.GL.bindTexture(this.GL.TEXTURE_2D, object.texture);
-      }
       this.GL.pixelStorei(this.GL.UNPACK_FLIP_Y_WEBGL, true);
     } 
 
@@ -256,7 +268,9 @@ class RenderEngine {
       'uModelViewMatrix',
       'sampler',
       'uWorldViewProjection',
-      'uLightPosition'
+      'uLightPosition',
+      'tex_norm',
+      'tex_diffuse'
     ]);
 
     object.UniformSetup = () => {
@@ -275,6 +289,12 @@ class RenderEngine {
       );
 
       this.GL.uniformMatrix4fv(
+        object.uniformLocations.uModelViewMatrix,
+        false,
+        this.Objects[objectName].modelViewMatrix
+      );
+
+      this.GL.uniformMatrix4fv(
         object.uniformLocations.uWorldViewProjection,
         false,
         this.worldViewProjection
@@ -287,7 +307,11 @@ class RenderEngine {
 
       // SAMPLER2D
       this.GL.uniform1i(
-        object.uniformLocations.sampler,
+        object.uniformLocations.tex_diffuse,
+        1
+      );
+      this.GL.uniform1i(
+        object.uniformLocations.tex_norm,
         0
       );
     }
@@ -406,8 +430,8 @@ class RenderEngine {
       this.Objects[object].drawableObject.Animate();
 
       glMatrix.mat4.multiply(this.Objects[object].modelViewMatrix, this.matrix, this.Objects[object].modelMatrix);
-      glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix);
-      glMatrix.mat4.transpose(this.Objects[object].normalMatrix, this.Objects[object].modelViewMatrix);
+      glMatrix.mat4.invert(this.Objects[object].normalMatrix, this.Objects[object].modelViewMatrix);
+      glMatrix.mat4.transpose(this.Objects[object].normalMatrix, this.Objects[object].normalMatrix);
       
 
       // MULTIPLY OBJECT INTO THE VIEW PROJECTION AND PUT INTO THE WORLD
