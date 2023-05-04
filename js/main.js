@@ -12,6 +12,15 @@ let fighterMap = {
   textureSource: 'resources/textures/fighter.jpg'
 };
 
+let cruiserMap = {
+  name: 'cruiser',
+  vertexSource: 'resources/shaders/vertex/normal.vert',
+  fragmentSource: 'resources/shaders/fragment/normal.frag',
+  objectSource: 'resources/models/USSEnterprise.obj',
+  textureSource: 'resources/textures/enterprise.png',
+  normalSource: 'resources/textures/bump6.jpg'
+};
+
 let planetMap = {
   name: 'planet',
   vertexSource: 'resources/shaders/vertex/normal.vert',
@@ -29,23 +38,28 @@ let sunMap = {
   textureSource: 'resources/textures/sun.jpg',
 }
 
-let normMap = {
-  name: 'norm',
-  vertexSource: 'resources/shaders/vertex/normal.vert',
-  fragmentSource: 'resources/shaders/fragment/normal.frag',
-  objectSource: 'resources/models/sphereT.obj',
-  textureSource: 'resources/textures/mars2.jpg',
-  normalSource: 'resources/textures/marsbump.jpg'
-}
-
 engine.CreateObject(
   fighterMap
 ).then(() => {
   engine.SetObjectAnimate("fighter", () => {
+    engine.Translate("fighter", [0, 0, -25]);
     engine.Spin("fighter", [0,1,0], 0.5);
     engine.Rotate("fighter", [1, 0, 0], 3 * Math.PI / 2);
   });
 });
+
+engine.CreateObject(
+  cruiserMap
+).then(() => {
+  engine.SetObjectAnimate("cruiser", () => {
+    engine.Translate("cruiser", [5, 0, -30]);
+    engine.Scale("cruiser", [10, 10, 10]);
+    engine.Rotate("cruiser", [0, 0, 1], Math.PI / 6);
+    engine.Rotate("cruiser", [0, 1, 0], -Math.PI / 8);
+    engine.Rotate("cruiser", [1, 0, 0], Math.PI / 16);
+    // engine.Spin("cruiser", [0,0,1], 0.5);
+  })
+})
 
 engine.CreateObject(
   planetMap
@@ -54,7 +68,7 @@ engine.CreateObject(
     engine.Translate("planet", [-200, 500, -5000]);
     engine.Scale("planet", [3000, 3000, 3000]);
     engine.Rotate("planet", [1, 0.5, 0], Math.PI / 4);
-    engine.Spin("planet", [0, 1, 0], 0.5);
+    engine.Spin("planet", [0, 1, 0], 0.1);
   })
 });
 
