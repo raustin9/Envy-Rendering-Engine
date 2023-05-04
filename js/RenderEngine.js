@@ -449,9 +449,9 @@ class RenderEngine {
       this.cameraVals[2] -= this.cameraMatrix[10] * deltaTime * this.moveSpeed * direction;
     }
 
-    if (this.keysPressed['65'] || this.keysPressed['68']) {
-      // W or S
-      const direction = this.keysPressed['68'] ? 1 : -1;
+    if (this.keysPressed['65'] || this.keysPressed['68'] || this.keysPressed['39']) {
+      // A OR D OR >
+      const direction = (this.keysPressed['68'] || this.keysPressed['39']) ? 1 : -1;
       this.cameraAngle += deltaTime * this.turnSpeed * direction;
     }
 
