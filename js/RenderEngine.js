@@ -148,9 +148,6 @@ class RenderEngine {
 
     this.GL.generateMipmap(this.GL.TEXTURE_CUBE_MAP);
     this.GL.texParameteri(this.GL.TEXTURE_CUBE_MAP, this.GL.TEXTURE_MIN_FILTER, this.GL.LINEAR_MIPMAP_LINEAR);
-
-    // this.GL.bindTexture(this.GL.TEXTURE_CUBE_MAP, null);
-    return texture;
   }
 
   /**
@@ -334,7 +331,8 @@ class RenderEngine {
       'tex_norm',
       'tex_diffuse',
       'cubemap',
-      'uCameraPosition'
+      'uCameraPosition',
+      'uRandom'
     ]);
 
     object.UniformSetup = () => {
@@ -392,6 +390,11 @@ class RenderEngine {
       this.GL.uniform1i(
         object.uniformLocations.cubemap,
         0
+      );
+
+      this.GL.uniform1i(
+        object.uniformLocations.uRandom,
+        Math.floor(Math.random() * 4)
       );
     }
 

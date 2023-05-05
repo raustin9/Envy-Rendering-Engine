@@ -42,14 +42,14 @@ let portalMap = {
   name: "portal",
   vertexSource: 'resources/shaders/vertex/env.vert',
   fragmentSource: 'resources/shaders/fragment/env.frag',
-  objectSource: 'resources/models/sphereT.obj',
+  objectSource: 'resources/models/Crystal.obj',
   environmentSource: [
-    'resources/textures/cubemap/posx.jpg',
-    'resources/textures/cubemap/negx.jpg',
-    'resources/textures/cubemap/posy.jpg',
-    'resources/textures/cubemap/negy.jpg',
-    'resources/textures/cubemap/posz.jpg',
-    'resources/textures/cubemap/negz.jpg',
+    'resources/textures/cubemap/portal.jpg',
+    'resources/textures/cubemap/portal.jpg',
+    'resources/textures/cubemap/portal.jpg',
+    'resources/textures/cubemap/portal.jpg',
+    'resources/textures/cubemap/portal.jpg',
+    'resources/textures/cubemap/portal.jpg',
   ]
 };
 
@@ -100,8 +100,11 @@ engine.CreateObject(
   portalMap
 ).then(() => {
   engine.SetObjectAnimate("portal", () => {
-    engine.Translate("portal", [5, 0, -10]);
-    engine.Scale("portal", [2.8, 8, 2.8]);
-    engine.Spin("portal", [0, 1, 0], 0.5);
+    engine.Translate("portal", [40, 20, -40]);
+    engine.Rotate("portal", [0, 1, 0], Math.PI / 2)
+    // engine.Spin("portal", [1, 0, 1], 0.6);
+    engine.Scale("portal", [15, 30, 15]);
+    // engine.Spin("portal", [0, 1, 0], 0.5);
+   
   })
 })
