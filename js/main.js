@@ -26,7 +26,7 @@ let planetMap = {
   vertexSource: 'resources/shaders/vertex/normal.vert',
   fragmentSource: 'resources/shaders/fragment/normal.frag',
   objectSource: 'resources/models/sphereT.obj',
-  textureSource: 'resources/textures/mars3.jpg',  
+  textureSource: 'resources/textures/Terrestrial1.png',  
   normalSource: 'resources/textures/bump5.jpg'
 }
 
@@ -37,6 +37,21 @@ let sunMap = {
   objectSource: 'resources/models/sphereT.obj',
   textureSource: 'resources/textures/sun.jpg',
 }
+
+let portalMap = {
+  name: "portal",
+  vertexSource: 'resources/shaders/vertex/env.vert',
+  fragmentSource: 'resources/shaders/fragment/env.frag',
+  objectSource: 'resources/models/sphereT.obj',
+  environmentSource: [
+    'resources/textures/cubemap/posx.jpg',
+    'resources/textures/cubemap/negx.jpg',
+    'resources/textures/cubemap/posy.jpg',
+    'resources/textures/cubemap/negy.jpg',
+    'resources/textures/cubemap/posz.jpg',
+    'resources/textures/cubemap/negz.jpg',
+  ]
+};
 
 engine.CreateObject(
   fighterMap
@@ -78,5 +93,15 @@ engine.CreateObject(
   engine.SetObjectAnimate("sun", () => {
     engine.Translate("sun", [20000, 6000, 0]);
     engine.Scale("sun", [1000, 1000, 1000]);
+  })
+})
+
+engine.CreateObject(
+  portalMap
+).then(() => {
+  engine.SetObjectAnimate("portal", () => {
+    engine.Translate("portal", [5, 0, -10]);
+    engine.Scale("portal", [2.8, 8, 2.8]);
+    engine.Spin("portal", [0, 1, 0], 0.5);
   })
 })

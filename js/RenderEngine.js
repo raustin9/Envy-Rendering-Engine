@@ -92,6 +92,68 @@ class RenderEngine {
   }
 
   /**
+   * This function generates a cube map using the desired textures
+   * @param {Array.<String>} faceTextures list of textures of the faces of the cube map
+   */
+  CubeMap(faceTextures) {
+    let texture = this.GL.createTexture();
+    this.GL.bindTexture(this.GL.TEXTURE_CUBE_MAP, texture);
+
+    const faceInfos = [
+      {target: this.GL.TEXTURE_CUBE_MAP_POSITIVE_X, faceTexture: faceTextures[0]},
+      {target: this.GL.TEXTURE_CUBE_MAP_NEGATIVE_X, faceTexture: faceTextures[1]},
+      {target: this.GL.TEXTURE_CUBE_MAP_POSITIVE_Y, faceTexture: faceTextures[2]},
+      {target: this.GL.TEXTURE_CUBE_MAP_NEGATIVE_Y, faceTexture: faceTextures[3]},
+      {target: this.GL.TEXTURE_CUBE_MAP_POSITIVE_Z, faceTexture: faceTextures[4]},
+      {target: this.GL.TEXTURE_CUBE_MAP_NEGATIVE_Z, faceTexture: faceTextures[5]}
+    ];
+
+    faceInfos.forEach((face) => {
+      const {target, faceTexture} = face;
+
+      const level = 0;
+      const internalFormat = this.GL.RGBA;
+      const width = 512;
+      const height = 512;
+      const format = this.GL.RGBA;
+      const type = this.GL.UNSIGNED_BYTE;
+
+      this.GL.texImage2D(
+        target,
+        level,
+        internalFormat,
+        width,
+        height,
+        0,
+        format,
+        type,
+        null
+      );
+
+      const image = new Image();
+      image.src = faceTexture;
+      image.addEventListener('load', function() {
+        this.GL.bindTexture(this.GL.TEXTURE_CUBE_MAP, texture);
+        this.GL.texImage2D(
+          target,
+          level,
+          internalFormat,
+          format,
+          type,
+          image
+        );
+        this.GL.generateMipmap(this.GL.TEXTURE_CUBE_MAP);
+      }.bind(this));
+    });
+
+    this.GL.generateMipmap(this.GL.TEXTURE_CUBE_MAP);
+    this.GL.texParameteri(this.GL.TEXTURE_CUBE_MAP, this.GL.TEXTURE_MIN_FILTER, this.GL.LINEAR_MIPMAP_LINEAR);
+
+    // this.GL.bindTexture(this.GL.TEXTURE_CUBE_MAP, null);
+    return texture;
+  }
+
+  /**
    * This function loads a texture and creates a gl texture from it
    * @param {String} src source file to load texture from
    * @returns WebglContext texture2d
@@ -121,7 +183,6 @@ class RenderEngine {
     );
   
     const image = new Image();
-    console.log(image);
     image.onload = () => {
       this.GL.bindTexture(this.GL.TEXTURE_2D, texture);
       this.GL.texImage2D(
@@ -230,9 +291,7 @@ class RenderEngine {
       // object.texture = this.LoadTexture(sourceMap.textureSource);
       
       if (sourceMap.normalSource) {
-        console.log("normal")
         // NORMAL MAP
-        
         object.textureBuffer.push(this.LoadTexture(sourceMap.normalSource));
         object.textureBuffer.push(this.LoadTexture(sourceMap.textureSource));
 
@@ -243,13 +302,6 @@ class RenderEngine {
           this.GL.activeTexture(this.GL.TEXTURE1);
           this.GL.bindTexture(this.GL.TEXTURE_2D, object.textureBuffer[1]);
         }
-      } else if (sourceMap.environmentSource) {
-        // IS AN ENVIRONMENT MAP
-        if (sourceMap.environmentSource.length != 6) {
-          throw new Error(`ENGINE: ERROR -- THIS OBJECT'S ENVIRONMENT MAP DOES NOT HAVE EXACTLY 6 IMAGES`);
-        }
-
-        return;
       } else {
         object.textureBuffer.push(this.LoadTexture(sourceMap.textureSource));
         object.TextureSetup = () => {
@@ -260,7 +312,17 @@ class RenderEngine {
 
       // IS A NORMAL OBJECT WITH TEXTURE
       this.GL.pixelStorei(this.GL.UNPACK_FLIP_Y_WEBGL, true);
-    } 
+    } else if (sourceMap.environmentSource) {
+      // IS AN ENVIRONMENT MAP
+      if (sourceMap.environmentSource.length != 6) {
+        throw new Error(`ENGINE: ERROR -- THIS OBJECT'S ENVIRONMENT MAP DOES NOT HAVE EXACTLY 6 IMAGES`);
+      }
+
+      this.CubeMap(sourceMap.environmentSource);
+      
+    } else {
+      throw new Error(`ENGINE: ERROR -- OBJECT |${name}| MUST HAVE EITHER ENVIRONMENT MAP OR TEXTURE`);
+    }
 
     object.uniformLocations = shader.GetUniformLocations([
       'uMatrix',
@@ -270,7 +332,9 @@ class RenderEngine {
       'uWorldViewProjection',
       'uLightPosition',
       'tex_norm',
-      'tex_diffuse'
+      'tex_diffuse',
+      'cubemap',
+      'uCameraPosition'
     ]);
 
     object.UniformSetup = () => {
@@ -305,6 +369,16 @@ class RenderEngine {
         this.lightPosition
       );
 
+      // CAMERA POSITION
+      this.GL.uniform3fv(
+        object.uniformLocations.uCameraPosition,
+        [
+          this.cameraMatrix[12],
+          this.cameraMatrix[13],
+          this.cameraMatrix[14],
+        ]
+      );
+
       // SAMPLER2D
       this.GL.uniform1i(
         object.uniformLocations.tex_diffuse,
@@ -312,6 +386,11 @@ class RenderEngine {
       );
       this.GL.uniform1i(
         object.uniformLocations.tex_norm,
+        0
+      );
+
+      this.GL.uniform1i(
+        object.uniformLocations.cubemap,
         0
       );
     }
