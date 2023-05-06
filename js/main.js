@@ -104,7 +104,7 @@ engine.CreateObject(
     engine.Rotate("portal", [0, 1, 0], Math.PI / 2)
     // engine.Spin("portal", [1, 0, 1], 0.6);
     engine.Scale("portal", [15, 30, 15]);
-    // engine.Spin("portal", [0, 1, 0], 0.5);
+    engine.Spin("portal", [0, 1, 0], 0.2);
    
   })
 })
