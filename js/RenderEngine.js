@@ -206,6 +206,10 @@ class RenderEngine {
 
     this.GL.bindTexture(this.GL.TEXTURE_2D, null);
   
+    return {
+      glTexture: texture,
+      image: image,
+    }
     return texture;
   }
 
@@ -234,6 +238,7 @@ class RenderEngine {
     let fragmentSource = await loadNetworkResourceAsText(sourceMap.fragmentSource);   // FRAGMENT SHADER
     let oData = await loadNetworkResourceAsText(sourceMap.objectSource);
     let texture = null;
+    let textureImage = null;
 
     let shader = new Shader(this.GL, vertexSource, fragmentSource);
 
@@ -284,13 +289,15 @@ class RenderEngine {
     );
 
     // SET THE TYPE OF TEXTURE THE OBJECT SHOULD HAVE
-    if (sourceMap.textureSource) {
-      // object.texture = this.LoadTexture(sourceMap.textureSource);
-      
+    if (sourceMap.textureSource) {      
       if (sourceMap.normalSource) {
         // NORMAL MAP
-        object.textureBuffer.push(this.LoadTexture(sourceMap.normalSource));
-        object.textureBuffer.push(this.LoadTexture(sourceMap.textureSource));
+        let normalTexture = this.LoadTexture(sourceMap.normalSource);
+        let baseTexture = this.LoadTexture(sourceMap.textureSource);
+        textureImage = baseTexture.image;
+
+        object.textureBuffer.push(normalTexture.glTexture);
+        object.textureBuffer.push(baseTexture.glTexture);
 
         object.TextureSetup = () => {
           this.GL.activeTexture(this.GL.TEXTURE0);
@@ -300,7 +307,11 @@ class RenderEngine {
           this.GL.bindTexture(this.GL.TEXTURE_2D, object.textureBuffer[1]);
         }
       } else {
-        object.textureBuffer.push(this.LoadTexture(sourceMap.textureSource));
+        let baseTexture = this.LoadTexture(sourceMap.textureSource);
+        textureImage = baseTexture.image;
+        
+        object.textureBuffer.push(baseTexture.glTexture);
+
         object.TextureSetup = () => {
           this.GL.activeTexture(this.GL.TEXTURE0);
           this.GL.bindTexture(this.GL.TEXTURE_2D, object.textureBuffer[0]);
@@ -332,7 +343,8 @@ class RenderEngine {
       'tex_diffuse',
       'cubemap',
       'uCameraPosition',
-      'uRandom'
+      'uRandom',
+      'uTexImageSize'
     ]);
 
     object.UniformSetup = () => {
@@ -367,6 +379,15 @@ class RenderEngine {
         this.lightPosition
       );
 
+      // TEXTURE IMAGE DIMENSIONS
+      if (textureImage) {
+        this.GL.uniform2fv(
+          object.uniformLocations.uTexImageSize,
+          new Float32Array([textureImage.height, textureImage.width])
+        );
+      };
+      
+
       // CAMERA POSITION
       this.GL.uniform3fv(
         object.uniformLocations.uCameraPosition,
@@ -392,10 +413,7 @@ class RenderEngine {
         0
       );
 
-      this.GL.uniform1i(
-        object.uniformLocations.uRandom,
-        Math.floor(Math.random() * 4)
-      );
+      
     }
 
     this.Objects[objectName] = {
