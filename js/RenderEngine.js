@@ -1,5 +1,11 @@
+import Texture from "./Texture.js";
+import DrawableObject from "./Object.js";
+import OBJData from "./ObjectLoader.js";
+import Shader from "./Shader.js";
+import { VertexData, ElementData } from "./Vertex.js";
+
 // THIS IS THE BASE CLASS FOR THE ENGINE //
-class RenderEngine {
+export default class RenderEngine {
   /* GLOBAL CONTEXT VARIABLES */
   window = null; // browser window
   canvas = null; // canvas element

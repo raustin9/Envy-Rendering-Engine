@@ -1,4 +1,4 @@
-class VertexData {
+export  class VertexData {
   GL = null;
   bufferID = null;
   data = null;
@@ -51,7 +51,7 @@ class VertexData {
   }
 }
 
-class ElementData {
+export class ElementData {
   GL = null;
   bufferID = null;
   data = null;

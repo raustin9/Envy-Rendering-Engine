@@ -1,4 +1,4 @@
-class OBJData {
+export default class OBJData {
   constructor(fileContents) {
     this.fileContents = fileContents;
     this.parse(this.fileContents);

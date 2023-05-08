@@ -1,4 +1,4 @@
-class Texture {
+export default class Texture {
   GL = null;            // A webgl2 rendering context
   glTexture = null;     // This is a webgl texture
   textureImage = null;  // This is the image file that will be the rendered texture

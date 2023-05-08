@@ -1,3 +1,5 @@
+import RenderEngine from './RenderEngine.js'
+
 // GET CANVAS CONTEXT TO PASS TO THE ENGINE
 // THE ENGINE WILL CREATE THE GL CONTEXT AND HENDLE RENDERING
 let canvas = document.getElementById("main-canvas");

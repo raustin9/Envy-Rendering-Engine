@@ -1,4 +1,4 @@
-class Shader {
+export default class Shader {
   GL = null;
   shaderProgram = null;
   vertSource = null;

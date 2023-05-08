@@ -1,4 +1,4 @@
-class DrawableObject {
+export default class DrawableObject {
   GL = null;
   shader = null;
   vertexBuffers = {};
