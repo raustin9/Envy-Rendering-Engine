@@ -76,6 +76,7 @@ engine.CreateObject(
   })
 })
 
+// CREATE THE GIANT PLANET IN THE BACKGROUND
 engine.CreateObject(
   planetMap
 ).then(() => {
