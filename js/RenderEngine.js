@@ -292,9 +292,10 @@ class RenderEngine {
     if (sourceMap.textureSource) {      
       if (sourceMap.normalSource) {
         // NORMAL MAP
-        let normalTexture = this.LoadTexture(sourceMap.normalSource);
-        let baseTexture = this.LoadTexture(sourceMap.textureSource);
-        textureImage = baseTexture.image;
+        let normalTexture = new Texture(this.GL, sourceMap.normalSource);
+        let baseTexture = new Texture(this.GL, sourceMap.textureSource);
+
+        textureImage = baseTexture.textureImage;
 
         object.textureBuffer.push(normalTexture.glTexture);
         object.textureBuffer.push(baseTexture.glTexture);
@@ -307,8 +308,8 @@ class RenderEngine {
           this.GL.bindTexture(this.GL.TEXTURE_2D, object.textureBuffer[1]);
         }
       } else {
-        let baseTexture = this.LoadTexture(sourceMap.textureSource);
-        textureImage = baseTexture.image;
+        let baseTexture = new Texture(this.GL, sourceMap.textureSource);
+        textureImage = baseTexture.textureImage;
         
         object.textureBuffer.push(baseTexture.glTexture);
 
