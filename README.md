@@ -19,3 +19,8 @@ I spent a lot of time designing the API for this, and it paid off in spades. It 
 I am going to spend some time writing some documentation, so that it might actually become a useful library for me in the future.
 Overall, this was a ton of fun, and I had a blast creating this.
 It has been an awesome class.
+
+## NOTES FOR FUTURE:
+* Create own file and class for textures to clean up their creation
+* Add documentation for all methods and describe use cases for them
+* ADD FRAMEBUFFER
