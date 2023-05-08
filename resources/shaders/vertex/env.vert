@@ -12,6 +12,7 @@ out vec3 vWorldPosition;
 uniform mat4 uNormalMatrix;
 uniform vec3 uCameraPosition;
 uniform mat4 uWorldViewProjection;
+uniform int uRandom;
 
 void main() {
   vec3 cPos = vec3(0, 0, 0);

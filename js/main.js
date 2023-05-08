@@ -122,7 +122,7 @@ engine.CreateObject(
   sunMap
 ).then(() => {
   engine.SetObjectAnimate("sun", () => {
-    engine.Translate("sun", [8000, 6000, -4000]);
+    engine.Translate("sun", [8000, 4000, -4000]);
     engine.Scale("sun", [1000, 1000, 1000]);
   })
 })
