@@ -53,26 +53,55 @@ let portalMap = {
   ]
 };
 
+// CREATE FIGHTERS
 engine.CreateObject(
   fighterMap
 ).then(() => {
   engine.SetObjectAnimate("fighter", () => {
-    engine.Translate("fighter", [0, 0, -25]);
-    engine.Spin("fighter", [0,1,0], 0.5);
+    engine.Translate("fighter", [0, -0.3, -5]);
     engine.Rotate("fighter", [1, 0, 0], 3 * Math.PI / 2);
+    engine.Rotate("fighter", [0, 0, 1], Math.PI);
+    engine.Rotate("fighter", [1, 0, 0], -0.2);
   });
 });
 
+engine.CreateObject(
+  fighterMap,
+  "fighter2"
+).then(() => {
+  engine.SetObjectAnimate("fighter2", () => {
+    engine.Translate("fighter2", [1.5, -1.3, -3.7]);
+    engine.Rotate("fighter2", [1, 0, 0], 3 * Math.PI / 2);
+    engine.Rotate("fighter2", [0, 0, 1], Math.PI);
+    engine.Rotate("fighter2", [1, 0, 0], -0.15);
+  });
+});
+
+engine.CreateObject(
+  fighterMap,
+  'fighter3'
+).then(() => {
+  engine.SetObjectAnimate("fighter3", () => {
+    engine.Translate("fighter3", [-1.5, -1.3, -3.7]);
+    engine.Rotate("fighter3", [1, 0, 0], 3 * Math.PI / 2);
+    engine.Rotate("fighter3", [0, 0, 1], Math.PI);
+    engine.Rotate("fighter3", [1, 0, 0], -0.15);
+  });
+});
+
+// CREATE THE USS ENTERPRISE
 engine.CreateObject(
   cruiserMap
 ).then(() => {
   engine.SetObjectAnimate("cruiser", () => {
     engine.Translate("cruiser", [5, 0, -30]);
+    
     engine.Scale("cruiser", [10, 10, 10]);
     engine.Rotate("cruiser", [0, 0, 1], Math.PI / 6);
     engine.Rotate("cruiser", [0, 1, 0], -Math.PI / 8);
     engine.Rotate("cruiser", [1, 0, 0], Math.PI / 16);
-    // engine.Spin("cruiser", [0,0,1], 0.5);
+
+    
   })
 })
 
@@ -88,24 +117,29 @@ engine.CreateObject(
   })
 });
 
+// CREATE THE SUN IN THE DISTANCE
 engine.CreateObject(
   sunMap
 ).then(() => {
   engine.SetObjectAnimate("sun", () => {
-    engine.Translate("sun", [20000, 6000, 0]);
+    engine.Translate("sun", [8000, 6000, -4000]);
     engine.Scale("sun", [1000, 1000, 1000]);
   })
 })
 
-engine.CreateObject(
-  portalMap
-).then(() => {
-  engine.SetObjectAnimate("portal", () => {
-    engine.Translate("portal", [40, 20, -40]);
-    engine.Rotate("portal", [0, 1, 0], Math.PI / 2)
-    // engine.Spin("portal", [1, 0, 1], 0.6);
-    engine.Scale("portal", [15, 30, 15]);
-    engine.Spin("portal", [0, 1, 0], 0.2);
-   
+// CREATE THE PORTALS
+for (let i = 0; i < 6; i++) {
+  engine.CreateObject(
+    portalMap
+    ,`portal${i}`
+  ).then(() => {
+    engine.SetObjectAnimate(`portal${i}`, () => {
+      engine.Translate(`portal${i}`, [-100 + i * 40, 20, -100]);
+      engine.Revolve(`portal${i}`, [6, 3, -5], 0.5);
+      engine.Rotate(`portal${i}`, [0, 1, 0], Math.PI / 2);
+      engine.Scale(`portal${i}`, [8, 15, 8]);
+      engine.Spin(`portal${i}`, [0, 1, 0], 0.2);
+      
+    })
   })
-})
+}

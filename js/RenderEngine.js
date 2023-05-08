@@ -218,7 +218,7 @@ class RenderEngine {
    * the list of objects to be rendered
    * @param {JSON.Object} sourceMap map of values that are used to create an object to be rendered
    */
-  async CreateObject(sourceMap) {
+  async CreateObject(sourceMap, name = sourceMap.name) {
     if (!sourceMap.name) {
       throw new Error("ENGINE: ERROR -- OBJECT DOES NOT HAVE NAME");
     }
@@ -233,7 +233,7 @@ class RenderEngine {
     }
 
 
-    let objectName = sourceMap.name;
+    let objectName = name;
     let vertexSource = await loadNetworkResourceAsText(sourceMap.vertexSource);     // VERTEX SHADER
     let fragmentSource = await loadNetworkResourceAsText(sourceMap.fragmentSource);   // FRAGMENT SHADER
     let oData = await loadNetworkResourceAsText(sourceMap.objectSource);
@@ -624,7 +624,7 @@ class RenderEngine {
       [
         Math.sin(this.globalTime * speed) * axis[0],
         Math.sin(this.globalTime * speed) * axis[1],
-        Math.sin(this.globalTime * speed) * axis[2],
+        Math.cos(this.globalTime * speed) * axis[2],
       ]
     );
   }
