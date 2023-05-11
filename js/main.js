@@ -55,6 +55,31 @@ let portalMap = {
   ]
 };
 
+let skyMap = {
+  vertexSource: 'resources/shaders/vertex/skybox.vert',
+  fragmentSource: 'resources/shaders/fragment/skybox.frag',
+  environmentSource: [
+    // 'resources/textures/cubemap/posx.jpg',
+    // 'resources/textures/cubemap/negx.jpg',
+    // 'resources/textures/cubemap/posy.jpg',
+    // 'resources/textures/cubemap/negy.jpg',
+    // 'resources/textures/cubemap/posz.jpg',
+    // 'resources/textures/cubemap/negz.jpg',
+    'resources/textures/cubemap/lightblue/right.png',
+    'resources/textures/cubemap/lightblue/left.png',
+    'resources/textures/cubemap/lightblue/bot.png',
+    'resources/textures/cubemap/lightblue/top.png',
+    'resources/textures/cubemap/lightblue/front.png',
+    'resources/textures/cubemap/lightblue/back.png',
+  ]
+};
+
+engine.CreateSkybox(
+  skyMap
+).then(() => {
+
+})
+
 // CREATE FIGHTERS
 engine.CreateObject(
   fighterMap
@@ -129,19 +154,19 @@ engine.CreateObject(
   })
 })
 
-// CREATE THE PORTALS
-for (let i = 0; i < 6; i++) {
-  engine.CreateObject(
-    portalMap
-    ,`portal${i}`
-  ).then(() => {
-    engine.SetObjectAnimate(`portal${i}`, () => {
-      engine.Translate(`portal${i}`, [-100 + i * 40, 20, -100]);
-      engine.Revolve(`portal${i}`, [6, 3, -5], 0.5);
-      engine.Rotate(`portal${i}`, [0, 1, 0], Math.PI / 2);
-      engine.Scale(`portal${i}`, [8, 15, 8]);
-      engine.Spin(`portal${i}`, [0, 1, 0], 0.2);
+// // CREATE THE PORTALS
+// for (let i = 0; i < 6; i++) {
+//   engine.CreateObject(
+//     portalMap
+//     ,`portal${i}`
+//   ).then(() => {
+//     engine.SetObjectAnimate(`portal${i}`, () => {
+//       engine.Translate(`portal${i}`, [-100 + i * 40, 20, -100]);
+//       engine.Revolve(`portal${i}`, [6, 3, -5], 0.5);
+//       engine.Rotate(`portal${i}`, [0, 1, 0], Math.PI / 2);
+//       engine.Scale(`portal${i}`, [8, 15, 8]);
+//       engine.Spin(`portal${i}`, [0, 1, 0], 0.2);
       
-    })
-  })
-}
+//     })
+//   })
+// }

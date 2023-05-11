@@ -22,6 +22,7 @@ export default class RenderEngine {
   normalMatrix = glMatrix.mat4.create();
   matrix = glMatrix.mat4.create();
   worldViewProjection = glMatrix.mat4.create();
+  worldViewProjectionInverse = glMatrix.mat4.create();
 
   lightPosition = [-6, 5, 2];
 
@@ -34,6 +35,8 @@ export default class RenderEngine {
   moveSpeed = 7;        // the speed that the camera can move around
   turnSpeed = 1;       // the speed that the camera can turn
   keysPressed = {};      // keeps track of whick keys have been pressed
+
+  Skybox = null;      // The global skybox | each scene can only have one skybox (for now)
 
   init = null;
 
@@ -104,6 +107,7 @@ export default class RenderEngine {
   CubeMap(faceTextures) {
     let texture = this.GL.createTexture();
     this.GL.bindTexture(this.GL.TEXTURE_CUBE_MAP, texture);
+    
 
     const faceInfos = [
       {target: this.GL.TEXTURE_CUBE_MAP_POSITIVE_X, faceTexture: faceTextures[0]},
@@ -119,8 +123,8 @@ export default class RenderEngine {
 
       const level = 0;
       const internalFormat = this.GL.RGBA;
-      const width = 512;
-      const height = 512;
+      const width = 1024;
+      const height = 1024;
       const format = this.GL.RGBA;
       const type = this.GL.UNSIGNED_BYTE;
 
@@ -149,11 +153,79 @@ export default class RenderEngine {
           image
         );
         this.GL.generateMipmap(this.GL.TEXTURE_CUBE_MAP);
+        this.GL.texParameteri(this.GL.TEXTURE_CUBE_MAP, this.GL.TEXTURE_MIN_FILTER, this.GL.LINEAR_MIPMAP_LINEAR);      
       }.bind(this));
     });
+  }
 
-    this.GL.generateMipmap(this.GL.TEXTURE_CUBE_MAP);
-    this.GL.texParameteri(this.GL.TEXTURE_CUBE_MAP, this.GL.TEXTURE_MIN_FILTER, this.GL.LINEAR_MIPMAP_LINEAR);
+  async CreateSkybox(sourceMap) {
+    let name = "skybox";
+    let vertexSource = await loadNetworkResourceAsText(sourceMap.vertexSource);     // VERTEX SHADER
+    let fragmentSource = await loadNetworkResourceAsText(sourceMap.fragmentSource);   // FRAGMENT SHADER
+    let shader = new Shader(this.GL, vertexSource, fragmentSource);
+
+    let positions = new Float32Array([
+      -1, -1, 
+        1, -1, 
+      -1,  1, 
+      -1,  1,
+        1, -1,
+        1,  1,
+    ]);
+
+    let skyboxPositionBuffer = new VertexData(
+      this.GL,
+      positions,
+      this.GL.FLOAT,
+      2
+    );
+
+    let attributeBufferMap = {
+      'aVertexPosition': skyboxPositionBuffer,
+    };
+
+    // ADD NEW OBJECT TO GLOBAL LIST
+    let object = new DrawableObject(
+      this.GL,
+      shader,
+      attributeBufferMap,
+      null,
+      positions.length / 2,
+    );
+
+    if (sourceMap.environmentSource.length != 6) {
+      throw new Error(`ENGINE: ERROR -- THIS OBJECT'S ENVIRONMENT MAP DOES NOT HAVE EXACTLY 6 IMAGES`);
+    }
+
+    this.CubeMap(sourceMap.environmentSource);
+
+    object.uniformLocations = shader.GetUniformLocations([
+      'uWorldViewProjectionInverse',
+      'cubemap',
+    ]);
+
+    object.UniformSetup = () => {
+      this.GL.uniformMatrix4fv(
+        object.uniformLocations.uWorldViewProjectionInverse,
+        false,
+        this.worldViewProjectionInverse
+      );
+
+      this.GL.uniform1i(
+        object.uniformLocations.cubemap,
+        0
+      );
+    }
+
+    // ADD SKYBOX TO LIST OF OBJECTS TO BE RENDERED
+    // this.Objects[name] = {
+    //   drawableObject: object,
+    //   // modelMatrix: glMatrix.mat4.create(),
+    //   texture: null,
+    //   modelViewMatrix: glMatrix.mat4.create(),
+    //   normalMatrix: glMatrix.mat4.create(),
+    // }
+    this.Skybox = object;
   }
 
   /**
@@ -232,7 +304,7 @@ export default class RenderEngine {
     );
 
     // SET THE TYPE OF TEXTURE THE OBJECT SHOULD HAVE
-    if (sourceMap.textureSource) {      
+    if (sourceMap.textureSource) {
       if (sourceMap.normalSource) {
         // NORMAL MAP
         let normalTexture = new Texture(this.GL, sourceMap.normalSource);
@@ -331,7 +403,6 @@ export default class RenderEngine {
         );
       };
       
-
       // CAMERA POSITION
       this.GL.uniform3fv(
         object.uniformLocations.uCameraPosition,
@@ -475,13 +546,18 @@ export default class RenderEngine {
         this.worldViewProjection,
         this.viewProjectionMatrix,
         this.Objects[object].modelMatrix
-      );
+      );  
 
       // DRAW THE OBJECT
       this.Objects[object].drawableObject.Draw();
 
       glMatrix.mat4.invert(this.Objects[object].modelViewMatrix, this.Objects[object].modelViewMatrix,);
       glMatrix.mat4.transpose(this.Objects[object].normalMatrix, this.Objects[object].modelViewMatrix);
+    }
+
+    glMatrix.mat4.invert(this.worldViewProjectionInverse, this.worldViewProjection);
+    if (this.Skybox) {
+      this.Skybox.Draw();
     }
 
     // HANDLE KEY INPUTS
