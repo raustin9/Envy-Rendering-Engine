@@ -1,5 +1,11 @@
 # Envy Rendering Engine
 
+## About
+This was originally an API that I wrote for the final project of my Computer Graphics class, but I have since expanded and added to it.  
+It is built using WebGL 2 and vanilla javascript with GLSL for the shaders. By running the example, you can see a relatively complex scene rendered with relative ease.
+There is much functionality left to be added like framebuffers and some bugs in some of the current effects like Environment Mapping, and those are on the roadmap to be fixed in the near future.
+Feel free to fork, tweak, and use this with whatever purpose you want!
+
 ## Current Effects:
 1. Normal Mapping: on the planet in the background
 2. Gausian Blur: On the sun (it is hard to tell on the sun, so you can render your own object to see it better)
