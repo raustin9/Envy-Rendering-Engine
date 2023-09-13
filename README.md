@@ -1,16 +1,14 @@
-# FINAL PROJECT FOR CS 452
+# Envy Rendering Engine
 
-## For this final, we needed to have at least 3 objects rendered and at least 3 'effects'
-## Objects:
-1. Planet
-2. The fighters
-3. USS Enterprise
-4. Sun
-
-## Effects:
+## Current Effects:
 1. Normal Mapping: on the planet in the background
 2. Gausian Blur: On the sun (it is hard to tell on the sun, so you can render your own object to see it better)
-3. Environment Mapping: On the "crystals" in the background
+3. Environment Mapping: Cube map \[still in progress]
+
+## Usage
+This is an API that is used to create complex graphical scenes with much more ease than using WebGL itself.  
+By looking at the example, you can see that it is easy to lead .obj 3D models, and you can apply textures and movements to them.  
+You can also write your own shaders or use the ones that I have provided **They are still in progress**
 
 ## My Own Notes:
 I want to say that this was an incredibly fun project that I will definitely continue to build on in the future.
