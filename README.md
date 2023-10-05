@@ -16,6 +16,8 @@ This is an API that is used to create complex graphical scenes with much more ea
 By looking at the example, you can see that it is easy to lead .obj 3D models, and you can apply textures and movements to them.  
 You can also write your own shaders or use the ones that I have provided **They are still in progress**
 
+Just include the files in your javascript project, and you will be able to call the api :)
+
 ## My Own Notes:
 I want to say that this was an incredibly fun project that I will definitely continue to build on in the future.
 Even though some of the effects are pretty cool, and I got some cool models to render, I would say that the coolest part of this project is the code design for sure.
