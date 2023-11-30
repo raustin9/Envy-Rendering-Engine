@@ -6,7 +6,7 @@ It is built using WebGL 2 and vanilla javascript with GLSL for the shaders. By r
 There is much functionality left to be added like framebuffers and some bugs in some of the current effects like Environment Mapping, and those are on the roadmap to be fixed in the near future.
 Feel free to fork, tweak, and use this with whatever purpose you want!
 
-## Current Effects:
+## Current Example Effects:
 1. Normal Mapping: on the planet in the background
 2. Gausian Blur: On the sun (it is hard to tell on the sun, so you can render your own object to see it better)
 3. Environment Mapping: Cube map \[still in progress]
