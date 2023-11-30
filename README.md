@@ -9,7 +9,7 @@ Feel free to fork, tweak, and use this with whatever purpose you want!
 ## Current Example Effects:
 1. Normal Mapping: on the planet in the background
 2. Gausian Blur: On the sun (it is hard to tell on the sun, so you can render your own object to see it better)
-3. Environment Mapping: Cube map \[still in progress]
+3. Environment Mapping: Cube map (Sky Box)
 
 ## Usage
 This is an API that is used to create complex graphical scenes with much more ease than using WebGL itself.  
