@@ -2,6 +2,8 @@
 
 ![Envy Demo](env.png "Demo")
 
+[See live demo](https://github.com/raustin9/Envy-Rendering-Engine/blob/init/js/main.js)!
+
 ## About
 This was originally an API that I wrote for the final project of my Computer Graphics class, but I have since expanded and added to it.  
 It is built using WebGL 2 and vanilla javascript with GLSL for the shaders. By running the example, you can see a relatively complex scene rendered with relative ease.
